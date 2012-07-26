@@ -52,6 +52,8 @@ The vim-ipython.py buffer tries to be pretty smart about how it handles the prom
 * Smart autocomplete using IPython
 * The status of the IPython kernel is displayed in the status line of the vim-ipython buffer.
 
+![demo][demo.png]
+
 # Currently being worked on
 * Graphical debugger
 * Bug fixes
