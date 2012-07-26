@@ -17,6 +17,7 @@ I am a graduate student who has used MATLAB for many years; eventually I became 
 4. No graphical debugger (pdb is painful to use)
 5. Autocomplete is oblivious to the variables in the current session.
 6. The syntax highlighting in IPython and Vim are different.
+
 Vim is my favorite debugger, because it is SOOO much faster (after several frustrating weeks getting used to it) than other editors.  These complaints combined with my love for vim prompted me to look for some way to integrate vim and ipython together.
 After searching for a while (and trying a number of dead-ends), I found [Ivanov's Vim-IPython](https://github.com/ivanov/vim-ipython).  His plugin is really great, and I very much appreciate all the work he put into it, however it wasn't quite what I had in mind, so I made a number of substantial modifications to it (rewriting the majority of the code underneath in the process).  I have added several features, and over the next few months will continue to add them until I have an editor environment that fits my needs.
 
