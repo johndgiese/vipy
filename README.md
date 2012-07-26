@@ -27,6 +27,7 @@ The vim-ipython buffer has some special mappings that make it act like a console
 * dd will delete the line and create a new prompt
 * 0 will goto the begining of the prompt
 * F12 will goto the previously used window
+* Typing object? will print the IPython help, properly formatted.
 * Typing object?? will open the file where the object is defined in a vim buffer.
 
 If you are in another python file (not the vim-ipython buffer):
@@ -34,12 +35,16 @@ If you are in another python file (not the vim-ipython buffer):
 * F9 in visual mode will execute the selected text
 * F9 in normal mode will execute the current line
 * Pressing K in normal mode will open the documentation for the word that the cursor is on.
+* Pressing F12 will drop the vim-ipython buffer in the current window if it isn't currently opened in any vim window, otherwise it will move the cursor to the end of the vim-ipython buffer.
 
-The vim-ipython 
+The vim-ipython.py buffer tries to be pretty smart about how it handles the prompts and output, however fundamentally it is norml vim buffer, and thus you can edit it how you would a normal buffer.  This is good and bad; you can use your favorite shortcuts, however you can also confuse it if you delete the prompts (i.e. the ">>> " of the "... " if you are entering a multiline command").
 
 Features:
+* You don't need to use a separate editor and terminal when working with python (no more alt-tabbing)
 * Search command history from previous sessions (uses IPython for this)
 * Vim's python highlighting in the terminal
+* Appropriatly handles input and raw_input requests from IPython; this allows the use of the command line python debugger
+* Smart autocomplete using IPython
 
 Known issues:
 * CTRL-F12 doesn't work the first time.  Close the IPython process command window that was opened by pressing CTRL-F12, and try again.
