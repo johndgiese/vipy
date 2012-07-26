@@ -9,7 +9,16 @@ I am still testing this and adding features, so if you run into bugs please post
 
 I have only tested this on gvim 7.3 (should work on vim 7.3) with IPython 0.14 and 0.15 on Windows 7, 64bit (should work on 32bit).
 
-You will need to install pyzmq .  There are some problems doing this on Windows 7 64bit (some .dll problem).  That being said, it is possible to get it working (I have on a couple different computers now).  See .
+# Features
+* You don't need to use a separate editor and terminal when working with python (no more alt-tabbing)
+* Search command history from previous sessions (uses IPython for this)
+* Vim's python highlighting in the terminal
+* Appropriatly handles input and raw_input requests from IPython; this allows the use of the command line python debugger
+* Smart autocomplete using IPython
+* The status of the IPython kernel is displayed in the status line of the vim-ipython buffer.
+
+![demo](https://github.com/johndgiese/vipython/raw/master/demo.PNG)
+
 # Intstallation
 * Install IPython 0.14 or 0.15
 * Install pyzmq (so that vim can talk to the IPython server)
@@ -43,16 +52,6 @@ If you are in another python file (not the vim-ipython buffer):
 * SHIFT-F12 will wipe the vim-ipython buffer and close the kernel
 
 The vim-ipython.py buffer tries to be pretty smart about how it handles the prompts and output, however fundamentally it is norml vim buffer, and thus you can edit it how you would a normal buffer.  This is good and bad; you can use your favorite shortcuts, however you can also confuse it if you delete the prompts (i.e. the ">>> " of the "... " if you are entering a multiline command").
-
-# Features
-* You don't need to use a separate editor and terminal when working with python (no more alt-tabbing)
-* Search command history from previous sessions (uses IPython for this)
-* Vim's python highlighting in the terminal
-* Appropriatly handles input and raw_input requests from IPython; this allows the use of the command line python debugger
-* Smart autocomplete using IPython
-* The status of the IPython kernel is displayed in the status line of the vim-ipython buffer.
-
-![demo][https://github.com/johndgiese/vipython/blob/master/demo.PNG?raw=true]
 
 # Currently being worked on
 * Graphical debugger
