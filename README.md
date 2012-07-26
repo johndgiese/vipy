@@ -1,16 +1,25 @@
 # Features
-* You don't need to use a separate editor and terminal when working with python (no more alt-tabbing)
-* Search command history from previous sessions (uses IPython for this)
+This plugin provides a special vim buffer that acts like the ipython terminal.  No more alt-tabbing from your editor to the interpreter!  This special buffer has the following features:
+* Search command history from previous sessions using up and down arrows
 * Vim's python highlighting in the terminal
 * Appropriatly handles input and raw_input requests from IPython; this allows the use of the command line python debugger
-* Smart autocomplete using IPython
-* The status of the IPython kernel is displayed in the status line of the vim-ipython buffer.
-![demo](https://github.com/johndgiese/vipython/raw/master/demo.PNG)
+* Smart autocomplete using IPython (also available in all other open python buffers)
+* The status of the IPython kernel is displayed in the status line of the vipy buffer.
+![demo](https://github.com/johndgiese/vipy/raw/master/demo.PNG)
 
 # About
-Vipython is a vim plugin that allows you to use IPython within vim.
-It is based off of [Ivanov's Vim-IPython](https://github.com/ivanov/vim-ipython), although I have made many significant changes and have a different approach to the vim-ipython buffer.
-I am still testing this and adding features, so if you run into bugs please post them as a git issue.
+I am a graduate student who has used MATLAB for many years; eventually I became frustrated with its limitations and switched to python+numpy+scipy+matplotlib+ipython.  This combination provides a powerful environment for scientific computing, however I became frustrated having the editor and python interpreter in separate programs.  I found this to be a limitation for a number of reasons:
+1.) Alt-tabbing is annoying
+2.) You can't execute the selected text (e.g. F9 in MATLAB)
+3.) You don't have cell-mode (CTRL-ENTER in MATLAB)
+4.) No graphical debugger (pdb is painful to use)
+5.) Autocomplete is oblivious to the variables in the current session.
+6.) The syntax highlighting in IPython and Vim are different.
+Vim is my favorite debugger, because it is SOOO much faster (after several frustrating weeks getting used to it) than other editors.  These complaints combined with my love for vim prompted me to look for some way to integrate vim and ipython together.
+After searching for a while (and trying a number of dead-ends), I found [Ivanov's Vim-IPython](https://github.com/ivanov/vim-ipython).  His plugin is really great, and I very much appreciate all the work he put into it, however it wasn't quite what I had in mind, so I made a number of substantial modifications to it (rewriting the majority of the code underneath in the process).  I have added several features, and over the next few months will continue to add them until I have an editor environment that fits my needs.
+
+I am still testing my code, so if you run into bugs please post them as a git issue.
+
 I have only used it on gvim 7.3 (should work on vim 7.3) with IPython 0.14 and 0.15 on Windows 7, 64bit (should work on 32bit).
 
 # Intstallation
