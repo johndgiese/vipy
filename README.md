@@ -13,7 +13,7 @@ You will need to install pyzmq so that vim can talk to the IPython server.  Ther
 
 # Basic Usage
 * Open a python file in vim.
-* Press CTRL-F12 to start vim-ipython.  This will start an IPython kernel and open a new buffere called vim-ipython.py.
+* Press CTRL-F12 to start vim-ipython.  This will start an IPython kernel and open a new buffere called vim-ipython.py.  You may have to do this twice (see known issues)
 
 The vim-ipython buffer has some special mappings that make it act like a console:
 * Execute commands by pressing SHIFT-ENTER after the ">>> " or "... "
@@ -21,11 +21,20 @@ The vim-ipython buffer has some special mappings that make it act like a console
 * dd will delete the line and create a new prompt
 * 0 will goto the begining of the prompt
 * F12 will goto the previously used window
+* Typing object?? will open the file where the object is defined in a vim buffer.
 
 If you are in another python file (not the vim-ipython buffer):
 * CTRL-F5 will execute the current file
 * F9 in visual mode will execute the selected text
 * F9 in normal mode will execute the current line
+* Pressing K in normal mode will open the documentation for the word that the cursor is on.
+
+The vim-ipython 
+
+Features:
+* Search command history from previous sessions (uses IPython for this)
+* Vim's python highlighting in the terminal
 
 Known issues:
+* CTRL-F12 doesn't work the first time.  Close the IPython process command window that was opened by pressing CTRL-F12, and try again.
 * Sometimes after executing a command in the vim-ipython buffer, the cursor will leave insert mode.  I am trying to find a workaround for this.
