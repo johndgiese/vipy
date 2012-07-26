@@ -7,12 +7,11 @@
 * The status of the IPython kernel is displayed in the status line of the vim-ipython buffer.
 ![demo](https://github.com/johndgiese/vipython/raw/master/demo.PNG)
 
-# vipython
-
-Vim plugin that allows you to use IPython within vim.
-Based loosely off of [Ivanov's Vim-IPython](https://github.com/ivanov/vim-ipython).
+# About
+Vipython is a vim plugin that allows you to use IPython within vim.
+It is based off of [Ivanov's Vim-IPython](https://github.com/ivanov/vim-ipython), although I have made many significant changes and have a different approach to the vim-ipython buffer.
 I am still testing this and adding features, so if you run into bugs please post them as a git issue.
-I have only tested this on gvim 7.3 (should work on vim 7.3) with IPython 0.14 and 0.15 on Windows 7, 64bit (should work on 32bit).
+I have only used it on gvim 7.3 (should work on vim 7.3) with IPython 0.14 and 0.15 on Windows 7, 64bit (should work on 32bit).
 
 # Intstallation
 * Install IPython 0.14 or 0.15
