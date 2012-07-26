@@ -21,8 +21,9 @@ You will need to install pyzmq .  There are some problems doing this on Windows 
 * Open a python file in vim.
 * Press CTRL-F12 to start vim-ipython.  
 
-
 This will start an IPython kernel and open a new buffere called vim-ipython.py.  If the cursor bounces between the vim-ipython buffer and the previous window, you may have to press SHIFT-F12 (to close vipython) and press CTRL-F12 again to restart it. (see known issues)
+
+Note that vipython is designed to act similarly to the MATLAB command window/editor.  I.e. you will have your normal python files opened in various windows, and you will also have the vim-ipython buffer (i.e. the command window) open in a separte window.  You can close the vim-ipython window if you want, and the buffer will remain in the background.
 
 The vim-ipython buffer has some special mappings that make it act like a console:
 * Execute commands by pressing SHIFT-ENTER after the ">>> " or "... "
