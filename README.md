@@ -6,10 +6,11 @@ This plugin provides a special vim buffer that acts like the ipython terminal.  
 * Smart autocomplete using IPython (also available in all other open python buffers)
 * The status of the IPython kernel is displayed in the status line of the vipy buffer.
 
-![demo](https://github.com/johndgiese/vipy/raw/master/demo.PNG)
+![demo](https://github.com/johndgiese/vipy/raw/master/demo.PNG "An example vipy session with one regular python file, and the special vipy buffer")
 
 # About
 I am a graduate student who has used MATLAB for many years; eventually I became frustrated with its limitations and switched to python+numpy+scipy+matplotlib+ipython.  This combination provides a powerful environment for scientific computing, however I became frustrated having the editor and python interpreter in separate programs.  I found this to be a limitation for a number of reasons:
+
 1. Alt-tabbing is annoying
 2. You can't execute the selected text (e.g. F9 in MATLAB)
 3. You don't have cell-mode (CTRL-ENTER in MATLAB)
