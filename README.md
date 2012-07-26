@@ -9,7 +9,13 @@ I am still testing this and adding features, so if you run into bugs please post
 
 I have only tested this on gvim 7.3 (should work on vim 7.3) with IPython 0.14 and 0.15 on Windows 7, 64bit (should work on 32bit).
 
-You will need to install pyzmq so that vim can talk to the IPython server.  There are some problems doing this on Windows 7 64bit (some .dll problem).  That being said, it is possible to get it working (I have on a couple different computers now).  See [here](https://github.com/ivanov/vim-ipython/issues/20).
+You will need to install pyzmq .  There are some problems doing this on Windows 7 64bit (some .dll problem).  That being said, it is possible to get it working (I have on a couple different computers now).  See .
+# Intstallation
+* Install IPython 0.14 or 0.15
+* Install pyzmq (so that vim can talk to the IPython server)
+* If you are using windows 64bit, fix the manifest as described [here](https://github.com/ivanov/vim-ipython/issues/20).
+* Download vipython.vim and place it in the directory .vim/ftplugin/python/vipython.vim or if you are using pathogen, in bundle/vipython/ftplugin/python/vipython.vim
+
 
 # Basic Usage
 * Open a python file in vim.
