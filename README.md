@@ -11,7 +11,7 @@ This plugin provides a special vim buffer that acts like the ipython terminal.  
 # About
 I am a graduate student who has used MATLAB for many years; eventually I became frustrated with its limitations and switched to python+numpy+scipy+matplotlib+ipython.  This combination provides a powerful environment for scientific computing, however I became frustrated having the editor and python interpreter in separate programs.  I found this to be a limitation for a number of reasons:
 
-1. Alt-tabbing is annoying
+1. Alt-tabbing is slow and annoying
 2. You can't execute the selected text (e.g. F9 in MATLAB)
 3. You don't have cell-mode (CTRL-ENTER in MATLAB)
 4. No graphical debugger (pdb is painful to use)
@@ -34,9 +34,9 @@ I have only used it on gvim 7.3 (should work on vim 7.3) with IPython 0.14 and 0
 
 # Basic Usage
 * Open a python file in vim.
-* Press CTRL-F12 to start vim-ipython.  
+* Press CTRL-F12 to start vim-ipython
 
-This will start an IPython kernel and open a new buffere called vim-ipython.py.  If the cursor bounces between the vim-ipython buffer and the previous window, you may have to press SHIFT-F12 (to close vipython) and press CTRL-F12 again to restart it. (see known issues)
+CTRL-F12 will start an IPython kernel in a separate command window (don't close it) and open a new window to the right of the current vim-window, with a special buffer loaded in it, called vipy.py.  If the cursor bounces between the vipy buffer and the previous window, you may have to press SHIFT-F12 (to close vipython) and press CTRL-F12 again to restart it. (see known issues)
 
 Note that vipython is designed to act similarly to the MATLAB command window/editor.  I.e. you will have your normal python files opened in various windows, and you will also have the vim-ipython buffer (i.e. the command window) open in a separte window.  You can close the vim-ipython window if you want, and the buffer will remain in the background.
 
