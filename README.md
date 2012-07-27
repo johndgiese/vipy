@@ -5,7 +5,7 @@ This plugin provides a special vim buffer that acts like the ipython terminal.  
 * Appropriatly handles input and raw_input requests from IPython; this allows the use of the command line python debugger
 * Smart autocomplete using IPython (also available in all other open python buffers)
 * The status of the IPython kernel is displayed in the status line of the vipy buffer.
-* 
+
 An example vipy session with one regular python file, and the special vipy buffer
 ![demo](https://github.com/johndgiese/vipy/raw/master/demo.PNG)
 
