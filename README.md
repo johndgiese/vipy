@@ -2,12 +2,16 @@
 This plugin provides a special Vim buffer that acts like the IPython terminal.  No more alt-tabbing from your editor to the interpreter!  This special buffer has the following features:
 * Search command history from previous sessions using up and down arrows
 * Appropriately handles input and raw_input requests from IPython; this allows the use of the command line python debugger
-* Smart autocomplete using IPython (also available in all other open python buffers)
-* The status of the IPython kernel is displayed in the status line of the vipy buffer.
 * You can set your default IPython profile in your vimrc file (g:vipy_profile=myprofile)
-* Vim's python highlighting in the terminal
+* Consistent python syntax highlighting in the editor and the terminal 
+* Convenience methods for editing files (e.g. pythonObject?? will open the file where the object is defined in a new vim buffer)
+The plugin also provides a number of features for all python files:
+* Smart autocomplete using IPython's object? ability
+* Execute the current visual selection with F9
+* Run the current file by pressing F5
+* CTRL-ENTER and SHIFT-ENTER will run the current "cell" (i.e. like MATLAB's cell mode; see below for more details)
 
-An example vipy session with one regular python file, and the special vipy buffer
+An example vipy session with one regular python file, and the special vipy buffer to the right:
 ![demo](https://github.com/johndgiese/vipy/raw/master/demo.PNG)
 
 # About
@@ -48,6 +52,7 @@ The vipy buffer has some special mappings that make it act like the IPython prom
 * Typing object? will print the IPython help, properly formatted.
 * Typing object?? will open the file where the object is defined in a vim buffer.
 * The vipy buffer has special syntax highlighting; input is formatted as usual, while standard output (except for python documentation) uses normal formatting.  This is an advantage over the normal IPython console, because vim's colorschemes are not restricted to ascii colors, and the console highlighting will follow the same setup you have for your regular python files.
+* The status of the IPython kernel is displayed in the status line of the vipy buffer
 
 If you are in another python file (not the vipy buffer):
 * CTRL-F5 will execute the current file
