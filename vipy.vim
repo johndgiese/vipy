@@ -116,6 +116,8 @@ run_flags= "-i"             # flags to for IPython's run magic when using <F5>
 current_line = ''
 vib_ns = 'normalstart'      # used to signify the start of normal highlighting
 vib_ne = 'normalend'        # signify the end of normal highlighting
+vib_es = 'errorstart'
+vib_ee = 'errorend'
 
 try:
     status
@@ -212,6 +214,7 @@ def shutdown():
         km.shell_channel.shutdown()
     except:
         echo('The kernel must have already shut down.')
+    del(km)
     km = None
     
     if is_vim_ipython_open(): # close the window
@@ -274,12 +277,18 @@ def setup_vib():
     else: # otherwise, turn of the ns, ne markers
         vib_ns = ''
         vib_ne = ''
+        vib_es = ''
+        vib_ee = ''
 
 def setup_highlighting():
     """ Setup the normal highlighting system for the current buffer. """
     vim.command("syn region VipyNormal matchgroup=Hidden start=/^" + vib_ns + "/ end=/" + vib_ne + "$/ concealends contains=SeeThrough")
-    vim.command("syn region SeeThrough start=/^>>>\ \|^\.\.\.\ / end=/$/ contained transparent contains=ALLBUT,pythonDoctest")
+    vim.command("syn region SeeThrough start=/^>>>\ \|^\.\.\.\ / end=/$/ contained transparent contains=ALLBUT,pythonDoctest,pythonDoctestValue")
+    vim.command("syn region VipyError matchgroup=Hidden start=/^" + vib_es + "/ end=/" + vib_ee + "$/ concealends contains=SeeThrough")
+    vim.command("syn region SeeThrough start=/^ \+\d\+ \|^-\+> \d\+ / end=/$/ contained transparent contains=ALLBUT,pythonDoctest,pythonDoctestValue")
     vim.command("hi link VipyNormal Normal")
+    vim.command("hi VipyError guibg=NONE guifg=red gui=NONE")
+    vim.command("hi link SeeThrough Normal")
     vim.command("setlocal conceallevel=3")
     vim.command('setlocal concealcursor=nvic')
     return
@@ -329,7 +338,7 @@ def enter_debug():
     vim.command("nnoremap <F10> :py db_step()<CR>")
     vim.command("nnoremap <F11> :py db_stepinto()<CR>")
     vim.command("nnoremap <C-F11> :py db_stepout()<CR>")
-    vim.command("nnoremap <F5> :py db_continue()<CR>") # this is set below
+    # vim.command("nnoremap <F5> :py db_continue()<CR>") # this is set below
     vim.command("nnoremap <S-F5> :py db_quit()<CR>")
 
 ## DEBUGGING
@@ -388,7 +397,7 @@ def db_continue():
         if len(bps) == 0:
             run_this_file()
             return
-        msg_id = send("get_ipython().magic(u'run -d %s')" % (repr(vim.current.buffer.name)[1:-1]))
+        msg_id = send("run -d %s" % (repr(vim.current.buffer.name)[1:-1]))
         in_debugger = True
     km.stdin_channel.input('c')
     return 'continue'
@@ -611,7 +620,8 @@ def send(cmds, *args, **kargs):
             
         if blankprompt.match(vib[-1]):
             vib[-1] = formatted[0]
-            vib.append(formatted[1:])
+            if len(formatted) > 1:
+                vib.append(formatted[1:])
         else:
             vib.append(formatted) 
     val = km.shell_channel.execute(cmds, *args, **kargs)
@@ -659,9 +669,12 @@ def update_subchannel_msgs(debug=False):
         elif msg_type == 'pyin':
             # don't want to print the input twice
             continue
+        # TODO: add better error formatting
         elif msg_type == 'pyerr':
             c = m['content']
-            s = "\n".join(map(strip_color_escapes,c['traceback']))
+            s = vib_es
+            s += "\n".join(map(strip_color_escapes,c['traceback']))
+            s += vib_ee
             # s += c['ename'] + ": " + c['evalue']
         elif msg_type == 'object_info_reply':
             c = m['content']
@@ -746,7 +759,7 @@ def with_subchannel(f, *args, **kwargs):
 
 @with_subchannel
 def run_this_file():
-    msg_id = send("get_ipython().magic(u'run %s %s')" % (run_flags, repr(vim.current.buffer.name)[1:-1]))
+    msg_id = send("run %s %s" % (run_flags, repr(vim.current.buffer.name)[1:-1]))
 
 @with_subchannel
 def run_this_line():
@@ -851,6 +864,7 @@ def get_doc_buffer(level=0):
     global vihb
     if status == 'busy':
         echo("Can't query for Help When IPython is busy.  Do you have figures opened?")
+        return
     if km is None:
         echo("Not connected to the IPython kernel... Type CTRL-F12 to start it.")
 
@@ -889,7 +903,7 @@ def get_doc_buffer(level=0):
 
 ## HELPER FUNCTIONS
 def goto_vib(insert_at_end=True):
-    global vib
+    global vib, prev_buf
     try:
         name = vib.name
         vim.command('drop ' + name)
@@ -1000,11 +1014,12 @@ strip = re.compile('\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]')
 def strip_color_escapes(s):
     return strip.sub('',s)
 
+indent_or_period = re.compile(r'[a-zA-Z0-9_.]')
 EOF
 
-" MAPPINGS
-nnoremap <silent> <C-F5> :wa<CR>:py run_this_file()<CR><ESC>
-inoremap <silent> <C-F5> <ESC>:wa<CR>:py run_this_file()<CR>
+" PYTHON FILE MAPPINGS
+nnoremap <silent> <F5> :wa<CR>:py run_this_file()<CR><ESC>
+inoremap <silent> <F5> <ESC>:wa<CR>:py run_this_file()<CR>
 noremap <silent> K :py get_doc_buffer()<CR>
 vnoremap <silent> <F9> y:py run_these_lines()<CR><ESC>
 nnoremap <silent> <F9> :py run_this_line()<CR><ESC>j
@@ -1016,7 +1031,7 @@ inoremap <silent> <C-F12> <ESC>:py startup()<CR>
 inoremap <silent> <S-F12> <ESC>:py shutdown()<CR>
 inoremap <silent> <S-CR> <ESC>:set nohlsearch<CR>V?^\n<CR>:python run_these_lines()<CR>:let @/ = ""<CR>:set hlsearch<CR>Go<ESC>o
 
-" TODO: add back cell evaluation mappings (similar to matlab)
+" CELL MODE MAPPINGS
 nnoremap <silent> <S-CR> :py run_cell()<CR><ESC>
 nnoremap <silent> <C-CR> :py run_cell(progress=True)<CR><ESC>
 inoremap <silent> <S-CR> <ESC>:py run_cell()<CR><ESC>i
@@ -1024,56 +1039,73 @@ inoremap <silent> <C-CR> <ESC>:py run_cell(progress=True)<CR><ESC>i
 vnoremap <silent> <S-CR> :py run_cell()<CR><ESC>gv
 vnoremap <silent> <C-CR> :py run_cell(progress=True)<CR><ESC>gv
 
+" AUTO COMPLETE
 fun! CompleteIPython(findstart, base)
-      if a:findstart
+    if a:findstart
         " locate the start of the word
         let line = getline('.')
         let start = col('.') - 1
-        while start > 0 && line[start-1] =~ '\k\|\.' "keyword
-          let start -= 1
+        python complete_type = 'normal'
+        while start > 0
+            "python vib.append('cc: %s' % vim.eval('line[start-1]'))
+            if line[start-1] !~ '\w\|\.'
+                if line[start-1] == '('
+                    python complete_type = 'argument'
+                endif
+                break
+            endif
+            let start -= 1
         endwhile
-        echo start
-        python << endpython
-current_line = vim.current.line
-endpython
         return start
-      else
-        " find months matching with "a:base"
+    else
         let res = []
+
         python << endpython
-base = vim.eval("a:base")
-findstart = vim.eval("a:findstart")
-msg_id = km.shell_channel.complete(base, current_line, vim.eval("col('.')"))
-try:
-    m = get_child_msg(msg_id)
-    matches = m['content']['matches']
-    matches.insert(0,base) # the "no completion" version
-    # we need to be careful with unicode, because we can have unicode
-    # completions for filenames (for the %run magic, for example). So the next
-    # line will fail on those:
-    #completions= [str(u) for u in matches]
-    # because str() won't work for non-ascii characters
-    # and we also have problems with unicode in vim, hence the following:
-    completions = [s.encode(vim_encoding) for s in matches]
-except Empty:
-    echo("no reply from IPython kernel")
-    completions=['']
-## Additionally, we have no good way of communicating lists to vim, so we have
-## to turn in into one long string, which can be problematic if e.g. the
-## completions contain quotes. The next line will not work if some filenames
-## contain quotes - but if that's the case, the user's just asking for
-## it, right?
-#completions = '["'+ '", "'.join(completions)+'"]'
-#vim.command("let completions = %s" % completions)
-## An alternative for the above, which will insert matches one at a time, so
-## if there's a problem with turning a match into a string, it'll just not
-## include the problematic match, instead of not including anything. There's a
-## bit more indirection here, but I think it's worth it
+cl = vim.current.line
+base = vim.eval('a:base')
+completions = ['']
+if complete_type in ['method','normal']:
+    msg_id = km.shell_channel.complete(base, cl, vim.eval("col('.')"))
+    try:
+        m = get_child_msg(msg_id)
+        matches = m['content']['matches']
+        matches.insert(0, base) # the "no completion" version
+        if in_vim_ipython:
+            completions = [s.encode(vim_encoding) for s in matches]
+        else:
+            completions = [s.encode(vim_encoding) for s in matches if s[0] and s[0] != '%']
+    except Empty:
+        echo("no reply from IPython kernel")
+elif complete_type == 'argument':
+    # get the object 
+    oname = 'a'
+    count = int(vim.eval("col('.')")) - 2 # one for indexing, one for cursor
+    o_start = count
+    o_end = count
+    while count > 0:
+        if cl[count] == '(':
+            o_end = count
+        elif not indent_or_period.match(cl[count]):
+            o_start = count
+            break
+        count = count - 1
+    oname = cl[o_start:o_end]
+
+    # request object info from ipython
+    msg_id = km.shell_channel.object_info(oname,detail_level=1)
+
+    try:
+        m = get_child_msg(msg_id)
+        if m['content']['found'] and m['content']['argspec']:
+            completions = m['content']['argspec']['args']
+    except Empty:
+        echo("no reply from IPython kernel") 
+
 for c in completions:
     vim.command('call add(res,"'+c+'")')
 endpython
-        "call extend(res,completions) 
+
         return res
-      endif
-    endfun
+    endif
+endfun
 
