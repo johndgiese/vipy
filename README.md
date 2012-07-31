@@ -5,7 +5,9 @@ This plugin provides a special Vim buffer that acts like the IPython terminal.  
 * You can set your default IPython profile in your vimrc file (g:vipy_profile=myprofile)
 * Consistent python syntax highlighting in the editor and the terminal 
 * Convenience methods for editing files (e.g. pythonObject?? will open the file where the object is defined in a new vim buffer)
+
 The plugin also provides a number of features for all python files:
+
 * Smart autocomplete using IPython's object? ability
 * Execute the current visual selection with F9
 * Run the current file by pressing F5
