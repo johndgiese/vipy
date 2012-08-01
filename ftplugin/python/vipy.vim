@@ -1,11 +1,6 @@
 " TODO: add debugger capabilites
 " TODO: fine-tune help window
 " TODO: figure out what is wrong with ion()
-" TODO: better error display
-" TODO: finish adding ?
-" TODO: make the edit a vim-only command that will open in a new buffer
-" TODO: use better syntax highlighting so that error messages and pydoc
-" # are colored correctly
 " TODO: handle multi-line input_requests (is this ever possible anyways?)
 " TODO: test what happens when the vib is in a different window
 " TODO: find a way to prevent vib from showing up in buffer list
@@ -17,13 +12,8 @@
 " TODO: make sure everything works on mac and linux
 " TODO: when there is really long output, and the user is in the vib, then
 " make it act like less (so that you can scroll down)
-" TODO figure out a way to display the In[nn] and Out[nn] displays (maybe use
-" the conceal feature?
-" TODO: figure out bug where it won't start properly after booting the
-" computer
 " TODO: ipython won't close with S-F12 if figures are open; figure out why and
 " fix
-" TODO: make a movement operator that runs code
 " FIXME: running a file with F5 places you in insert mode
 " FIXME: the color coding breaks sometimes when if 
 " TODO: prevent F9 and other mappings from throwing warnings when python is
@@ -57,7 +47,6 @@ let g:ipy_status="idle"
 if !exists('g:vipy_profile')
     let g:vipy_profile = 'default'
 endif
-
 " TODO: finish this option
 "if !exists('g:vipy_clean_connections')
     "let g:vipy_profile = 'true'
@@ -101,12 +90,34 @@ endif
 "sy match ansiSuppress conceal +\%x1b\[0m+
 
 
+
+
+
+
+
+"try
 python << EOF
 import vim
 import sys
 import re
 from os.path import basename
-from IPython.zmq.blockingkernelmanager import BlockingKernelManager, Empty
+try:
+    import IPython
+    if float(IPython.__version__) < 0.13:
+        vim.command("echoe('vipy requires IPython >= 0.13')")
+        raise ImportErorr('vipy requires IPython >= 0.13')
+except:
+    # let vim's try-catch handle this
+    raise
+
+try:
+    from IPython.zmq.blockingkernelmanager import BlockingKernelManager, Empty
+except ImportError:
+    vim.command("echoe('You must have pyzmq >= 2.1.4 installed so that vim can communicate with IPython.')")
+    if vim.eval("has('win64')"):
+        vim.command("echoe('There is a known issue with pyzmq on 64 bit windows machines.')")
+    raise
+    
 from IPython.lib.kernel import find_connection_file
 
 debugging = False
@@ -175,10 +186,21 @@ def startup():
         profile = vim.eval('g:vipy_profile')
         fullpath = None
         try:
-            # see if there is already an IPython instance open
+            # see if there is already an IPython instance open ...
             fullpath = find_connection_file('', profile=profile)
-        except:
-            vim.command('!start /min ipython kernel --profile=' + profile)
+        except: # ... if not start one
+            ipy_args = '--profile=' + profile
+            # TODO: add custom ipython directory
+            #if vim.eval("exists('g:vipy_ipy_dir')"):
+            #    ipy_dir = vim.eval('g:vipy_ipy_dir')
+            #    ipy_args += ' --ipython-dir=' + ipy_dir
+
+            if vim.eval("has('win32')") or vim.eval("has('win64')"):
+                vim.command('!start /min ipython kernel ' + ipy_args)
+            elif vim.eval("has('unix')") or vim.eval("has('mac')"):
+                vim.command('!ipython kernel ' + ipy_args)
+                
+            # try to find connection file (sometimes you need to wait a bit)
             count = 0
             while count < 10:
                 try:
@@ -287,7 +309,7 @@ def setup_highlighting():
     vim.command("syn region VipyError matchgroup=Hidden start=/^" + vib_es + "/ end=/" + vib_ee + "$/ concealends contains=SeeThrough")
     vim.command("syn region SeeThrough start=/^ \+\d\+ \|^-\+> \d\+ / end=/$/ contained transparent contains=ALLBUT,pythonDoctest,pythonDoctestValue")
     vim.command("hi link VipyNormal Normal")
-    vim.command("hi VipyError guibg=NONE guifg=red gui=NONE")
+    vim.command("hi VipyError guibg=NONE guifg=#FF7777 gui=NONE")
     vim.command("hi link SeeThrough Normal")
     vim.command("setlocal conceallevel=3")
     vim.command('setlocal concealcursor=nvic')
@@ -352,7 +374,7 @@ top of pdb. """
 # TODO: figure out a way to know when you are out of the debugger
 
 vim.command("sign define pypc texthl=ProgCount text=>>")
-vim.command("hi ProgCount guibg=#000000 guifg=#00FE33 gui=bold")
+vim.command("hi ProgCount guibg=#000000 guifg=#00FE33 gui=bold cterm=NONE ctermfg=red ctermbg=NONE")
 
 bps = []
 
@@ -560,7 +582,7 @@ def shift_enter_at_prompt():
         elif cmds.endswith('?'):
             content = unh(get_doc(cmds[:-1]))
             if content == '':
-                content =  'No matches found for: %s' % cmds[:-1]
+                content =  unh('No matches found for: %s' % cmds[:-1])
             vib.append(content)
             new_prompt()
             return
@@ -1038,6 +1060,11 @@ inoremap <silent> <S-CR> <ESC>:py run_cell()<CR><ESC>i
 inoremap <silent> <C-CR> <ESC>:py run_cell(progress=True)<CR><ESC>i
 vnoremap <silent> <S-CR> :py run_cell()<CR><ESC>gv
 vnoremap <silent> <C-CR> :py run_cell(progress=True)<CR><ESC>gv
+
+
+"finally
+    "echoe 'unable to load vipy!  See https://github.com/johndgiese/vipy/issues for possible solutions.'
+"endtry
 
 " AUTO COMPLETE
 fun! CompleteIPython(findstart, base)
