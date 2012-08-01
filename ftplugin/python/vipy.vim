@@ -908,7 +908,8 @@ def get_doc_buffer(level=0):
     if not vihb:
         vim.command('new vipy-help.py')
         vihb = vim.current.buffer
-        vim.command('setlocal modifiable noro nonumber')
+        vim.command("setlocal nonumber")
+        vim.command("setlocal bufhidden=hide buftype=nofile ft=python noswf nobl")
         vim.command("noremap <buffer> K <C-w>p")
         # doc window quick quit keys: 'q' and 'escape'
         vim.command('noremap <buffer> q :q<CR>')
@@ -1136,3 +1137,27 @@ endpython
     endif
 endfun
 
+" Scrolling is nice when you are reading python documentation
+function! LessMode()
+  if g:vipy_lessmode == 0
+    let g:vipy_lessmode = 1
+    let onoff = 'on'
+    " Scroll half a page down
+    noremap <script> d <C-D>
+    " Scroll one line down
+    noremap <script> j <C-E>
+    " Scroll half a page up
+    noremap <script> u <C-U>
+    " Scroll one line up
+    noremap <script> k <C-Y>
+  else
+    let g:vipy_lessmode = 0
+    let onoff = 'off'
+    unmap d
+    unmap j
+    unmap u
+    unmap k
+  endif
+  echohl Label | echo "Less mode" onoff | echohl None
+endfunction
+let g:vipy_lessmode = 0
