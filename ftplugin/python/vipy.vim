@@ -1,9 +1,6 @@
 " TODO: add debugger capabilites
-" TODO: fine-tune help window
 " TODO: figure out what is wrong with ion()
 " TODO: handle multi-line input_requests (is this ever possible anyways?)
-" TODO: test what happens when the vib is in a different window
-" TODO: find a way to prevent vib from showing up in buffer list
 " TODO: make vim-only commands work even if there are multiple entered
 " togethre
 " TODO: fix cursor issue
@@ -47,10 +44,10 @@ let g:ipy_status="idle"
 if !exists('g:vipy_profile')
     let g:vipy_profile = 'default'
 endif
-" TODO: finish this option
-"if !exists('g:vipy_clean_connections')
-    "let g:vipy_profile = 'true'
-"endif
+
+if !exists('g:vipy_clean_connect_files')
+    let g:vipy_clean_connect_files = 1
+endif
 
 
 "try
@@ -58,6 +55,7 @@ python << EOF
 import vim
 import sys
 import re
+import os
 from os.path import basename
 try:
     import IPython
@@ -108,6 +106,10 @@ try:
     km
 except NameError:
     km = None
+try:
+    km_started_by_vim
+except:
+    km_started_by_vim = False
 
 # get around unicode problems when interfacing with vim
 vim_encoding = vim.eval('&encoding') or 'utf-8'
@@ -128,7 +130,7 @@ except AttributeError:
 
 ## STARTUP and SHUTDOWN
 def startup():
-    global km, fullpath
+    global km, fullpath, km_started_by_vim
     if not km:
         vim.command("augroup vimipython")
         vim.command("au CursorHold * :python update_subchannel_msgs()")
@@ -138,8 +140,6 @@ def startup():
         vim.command("au VimLeavePre :python shutdown()")
         vim.command("augroup END")
 
-        # TODO: need a good way to ping the server, so that we can see
-        # when it is alive, and also tell when it is done booting up
         count = 0
         profile = vim.eval('g:vipy_profile')
         fullpath = None
@@ -171,8 +171,11 @@ def startup():
             km = BlockingKernelManager(connection_file = fullpath)
             km.load_connection_file()
             km.start_channels()
+            km_started_by_vim = True
         else:
             echo("Couldn't connect to vim-ipython.")
+            if profile != 'default':
+                echo("Is it possible that the profile specified with g:vipy_profile doesn't exist?  You can create ipython profiles at the command line using: ipython profile create profilename")
             return
 
         vib = get_vim_ipython_buffer()
@@ -190,12 +193,21 @@ def startup():
         echo('Vipy has already been started!  Press SHIFT-F12 to close the current seeion.')
 
 def shutdown():
-    global km, in_debugger, vib, vihb
-    in_debugger = False
-    try:
-        km.shell_channel.shutdown()
-    except:
-        echo('The kernel must have already shut down.')
+    global km, in_debugger, vib, vihb, km_started_by_vim
+    
+    # shutdown the kernel if we started it
+    if km_started_by_vim:
+        try:
+            km.shell_channel.shutdown()
+        except:
+            echo('The kernel must have already shut down.')
+        if vim.eval('g:vipy_clean_connect_files'):
+            import os
+            connect_dir = os.path.dirname(fullpath)
+            connect_files = [p for p in os.listdir(connect_dir) if p.endswith('.json')]
+            for p in connect_files:
+                os.remove(os.path.join(connect_dir, p))
+
     del(km)
     km = None
     
@@ -501,25 +513,23 @@ def shift_enter_at_prompt():
             vib[:] = None # clear the buffer
             new_prompt(append=False)
             return
-            # TODO: allow the user to start editing a file from command window
-            #        elif cmds.startswith('edit '):
-            #            fnames = cmds[5:].split(' ')
-            #            msg_id = km.shell_channel.execute('%pwd')
-            #            try:
-            #                pwd = get_child_msg(msg_id)['content']
-            #                vib.append(repr(pwd).splitlines())
-            #                pwd = pwd['data']['text/plain']
-            #            except Empty:
-            #                # timeout occurred
-            #                return echo("no reply from IPython kernel")
-            #            for fname in fnames:
-            #                vib.append(pwd + fname)
-        elif cmds.startswith('edit '):
-            try:
-                vim.command('drop ' + cmds[5:])
-            except:
-                vib.append(unh("Couldn't find the requested file!"))
-            new_prompt()
+            #elif cmds.startswith('edit '):
+            #    fnames = cmds[5:].split(' ')
+            #    msg_id = km.shell_channel.execute('', user_expressions={'pwd': '%pwd'})
+            #    try:
+            #        pwd = get_child_msg(msg_id)
+            #        vib.append(repr(pwd).splitlines())
+            #        pwd = pwd['user_expressions']['pwd']
+            #    except Empty:
+            #        # timeout occurred
+            #        return echo("no reply from IPython kernel")
+            #    for fname in fnames:
+            #        try:
+            #            pp = os.path.join(pwd, fname)
+            #            vim.command('drop ' + pp)
+            #        except:
+            #            vib.append(unh("Couldn't find " + pp))
+            #    new_prompt()
         elif cmds.endswith('??'):
             msg_id = km.shell_channel.object_info(cmds[:-2])
             try:
@@ -552,6 +562,7 @@ def shift_enter_at_prompt():
             while ping_count < 30 and not update_subchannel_msgs():
                 vim.command("sleep 20m")
                 ping_count += 1
+
 def new_prompt(goto=True, append=True):
     if append:
         vib.append('>>> ')
@@ -715,7 +726,6 @@ def update_subchannel_msgs(debug=False):
 
             
 def get_child_msg(msg_id):
-    # XXX: message handling should be split into its own process in the future
     while True:
         # get_msg will raise with Empty exception if no messages arrive in 5 second
         m= km.shell_channel.get_msg(timeout=5)
@@ -892,7 +902,7 @@ def goto_vib(insert_at_end=True):
         if insert_at_end:
             vim.command('normal G')
             vim.command('startinsert!')
-    except vim.error:
+    except:
         echo("""It appears that the vipy.py buffer was deleted.  You can create
         a new one without reseting the python server (and losing any variables
         in the interactive namespace) by running the command :python
@@ -1015,7 +1025,7 @@ vnoremap <silent> <F9> y:py run_these_lines()<CR><ESC>
 nnoremap <silent> <F9> :py run_this_line()<CR><ESC>j
 noremap <silent> <F12> :py toggle_vib()<CR>
 noremap <silent> <C-F12> :py startup()<CR>
-noremap <silent> <S-F12> :py shutdown()<CR>
+noremap <silent> <S-F12> :py shutdown()<CR><ESC>
 inoremap <silent> <F12> <ESC>:py toggle_vib()<CR>
 inoremap <silent> <C-F12> <ESC>:py startup()<CR>
 inoremap <silent> <S-F12> <ESC>:py shutdown()<CR>
