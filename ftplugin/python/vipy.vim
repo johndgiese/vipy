@@ -59,7 +59,8 @@ import os
 from os.path import basename
 try:
     import IPython
-    if float(IPython.__version__) < 0.13:
+    version = IPython.__version__.split('.')
+    if float(version[1]) < 0.13:
         vim.command("echoe('vipy requires IPython >= 0.13')")
         raise ImportErorr('vipy requires IPython >= 0.13')
 except:
