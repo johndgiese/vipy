@@ -1,0 +1,14 @@
+start vipy
+    check if necessary modules exist, if they do:
+        import modules
+    see if vipy is already open, if not:
+    see if ipython is already open, if not:
+        setup ipython arguments
+        determing operating system
+        start ipython correctly
+    else connect to current ipython session
+    create vipy window (if not already made)
+
+Make sure the correct version of IPython and pyzmq are available.
+Make sure that vim was compiled with python.
+Make sure that the specified profile exists, and that the ipython directory can be found

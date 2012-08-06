@@ -1,3 +1,8 @@
+" Vim plugin for integrating IPython into vim for fast python programming
+" Last Change: 2012 Aug
+" Maintainer: J. David Giese <johndgiese@gmail.com>
+" License: This file is placed in the public domain.
+
 " TODO: add debugger capabilites
 " TODO: figure out what is wrong with ion()
 " TODO: handle multi-line input_requests (is this ever possible anyways?)
@@ -29,14 +34,15 @@
 
 if !has('python')
     " exit if python is not available.
+    echoe('In order to use vipy you must have a version of vim or gvim that is compiled with python support.')
     finish
 endif
 
 " add this back when I am done developing
-"if exists("b:did_vimipy")
+"if exists("g:loaded_vipy")
 "   finish
 "endif
-"let b:did_vimipy = 1
+"let g:loaded_vipy = 1
 
 let g:ipy_status="idle"
 
