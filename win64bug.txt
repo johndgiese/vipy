@@ -1,4 +1,4 @@
-There is a bug in pyzmq that only seems to show up on windows 64bit.  Fortuneatly there is a reasnobly simple solution:
+There is a bug in pyzmq that only seems to show up on windows 64bit or 32bit.  Fortuneatly there is a reasnobly simple solution:
 
 First make sure you didn't install pyzmq with easy_install.  Instead, you want to install the binary from here:
 
@@ -11,7 +11,9 @@ Program Files/Windows SDK/
 
 This executable comes with the windows SDK, but you can probably find it other places online.
 
-Once you have found mt.exe, make a file in the same directory called fixpyzmq.bat, and copy the following text into it:
+Once you have found mt.exe, make a file in the same directory called fixpyzmq.bat.
+
+Then, if you are using windows 64bit, copy the following text into it:
 
 mt.exe -inputresource:C:\Windows\SysWOW64\python27.dll;#2 -outputresource:C:\Python27\Lib\site-packages\zmq\core\constants.pyd;#2
 mt.exe -inputresource:C:\Windows\SysWOW64\python27.dll;#2 -outputresource:C:\Python27\Lib\site-packages\zmq\core\context.pyd;#2
@@ -28,8 +30,24 @@ mt.exe -inputresource:C:\Windows\SysWOW64\python27.dll;#2 -outputresource:C:\Pyt
 mt.exe -inputresource:C:\Windows\SysWOW64\python27.dll;#2 -outputresource:C:\Python27\Lib\site-packages\zmq\libzmq.dll;#2
 PAUSE
 
-You now have a batch file that will clean up the manifest of all the pyd and dlls in pyzmq.  Run the bat file (you can simply double click it in the windows explorer).  You should see some output like this:
+If you are using windows 32bit use the following:
 
+mt.exe -inputresource:C:\Windows\system32\python27.dll;#2 -outputresource:C:\Python27\Lib\site-packages\zmq\core\constants.pyd;#2
+mt.exe -inputresource:C:\Windows\system32\python27.dll;#2 -outputresource:C:\Python27\Lib\site-packages\zmq\core\context.pyd;#2
+mt.exe -inputresource:C:\Windows\system32\python27.dll;#2 -outputresource:C:\Python27\Lib\site-packages\zmq\core\device.pyd;#2
+mt.exe -inputresource:C:\Windows\system32\python27.dll;#2 -outputresource:C:\Python27\Lib\site-packages\zmq\core\error.pyd;#2
+mt.exe -inputresource:C:\Windows\system32\python27.dll;#2 -outputresource:C:\Python27\Lib\site-packages\zmq\core\message.pyd;#2
+mt.exe -inputresource:C:\Windows\system32\python27.dll;#2 -outputresource:C:\Python27\Lib\site-packages\zmq\core\socket.pyd;#2
+mt.exe -inputresource:C:\Windows\system32\python27.dll;#2 -outputresource:C:\Python27\Lib\site-packages\zmq\core\stopwatch.pyd;#2
+mt.exe -inputresource:C:\Windows\system32\python27.dll;#2 -outputresource:C:\Python27\Lib\site-packages\zmq\core\_poll.pyd;#2
+mt.exe -inputresource:C:\Windows\system32\python27.dll;#2 -outputresource:C:\Python27\Lib\site-packages\zmq\core\_version.pyd;#2
+mt.exe -inputresource:C:\Windows\system32\python27.dll;#2 -outputresource:C:\Python27\Lib\site-packages\zmq\devices\monitoredqueue.pyd;#2
+mt.exe -inputresource:C:\Windows\system32\python27.dll;#2 -outputresource:C:\Python27\Lib\site-packages\zmq\utils\initthreads.pyd;#2
+mt.exe -inputresource:C:\Windows\system32\python27.dll;#2 -outputresource:C:\Python27\Lib\site-packages\zmq\utils\rebuffer.pyd;#2
+mt.exe -inputresource:C:\Windows\system32\python27.dll;#2 -outputresource:C:\Python27\Lib\site-packages\zmq\libzmq.dll;#2
+PAUSE
+
+You now have a batch file that will clean up the manifest of all the pyd and dlls in pyzmq.  Run the bat file (you can simply double click it in the windows explorer).  You should see some output like this:
 
 C:\Users\jdgiese\Desktop>mt.exe -inputresource:C:\Windows\SysWOW64\python27.dll;
 #2 -outputresource:C:\Python27\Lib\site-packages\zmq\core\constants.pyd;#2
