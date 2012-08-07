@@ -21,6 +21,7 @@
 " when this bug occurs
 " TODO: handle copy-pasting into vib better
 " TODO: figure out a way to tell if the kernel is closed...
+" FIXME: error with normalstart when there is a single apastrophe between them
 "
 " TODO: better documentation
 " TODO: user options
@@ -60,22 +61,21 @@ from os.path import basename
 try:
     import IPython
     version = IPython.__version__.split('.')
-    if float(version[1]) < 0.13:
-        vim.command("echoe('vipy requires IPython >= 0.13')")
+    if float(version[0]) == 0 and float(version[1]) < 13:
+        vim.command("echoe('vipy requires IPython >= 0.13, you have ipython version" + IPython.__version__ + "')")
         raise ImportErorr('vipy requires IPython >= 0.13')
 except:
-    # let vim's try-catch handle this
+    # let vim's try-catch handle this             
     raise
 
 try:
     from IPython.zmq.blockingkernelmanager import BlockingKernelManager, Empty
+    from IPython.lib.kernel import find_connection_file
 except ImportError:
     vim.command("echoe('You must have pyzmq >= 2.1.4 installed so that vim can communicate with IPython.')")
-    if vim.eval("has('win64')"):
+    if vim.eval("has('win64')") == '1':
         vim.command("echoe('There is a known issue with pyzmq on 64 bit windows machines.')")
     raise
-    
-from IPython.lib.kernel import find_connection_file
 
 debugging = False
 in_debugger = False
@@ -154,9 +154,9 @@ def startup():
             #    ipy_dir = vim.eval('g:vipy_ipy_dir')
             #    ipy_args += ' --ipython-dir=' + ipy_dir
 
-            if vim.eval("has('win32')") or vim.eval("has('win64')"):
+            if vim.eval("has('win32')") == '1' or vim.eval("has('win64')") == '1':
                 vim.command('!start /min ipython kernel ' + ipy_args)
-            elif vim.eval("has('unix')") or vim.eval("has('mac')"):
+            elif vim.eval("has('unix')") == '0' or vim.eval("has('mac')") == '1':
                 vim.command('!ipython kernel ' + ipy_args)
                 
             # try to find connection file (sometimes you need to wait a bit)
