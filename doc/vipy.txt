@@ -76,12 +76,9 @@ The following global variables can be set in your vimrc:
 The ipython profile can be set using:
 g:vipy_profile='default'
 
-IPython has a routine for finding the ipython directory; usually it will use
-the $HOME environment variable by default.  If you want to hard-code a
-directory you can use:
-g:vipy_ipy_dir='C:\my\ipython\dir'
-Leave the value unset (or set it to "0") if you want to let ipython find the
-directory naturally.
+IPython has a routine for finding the ipython directory that uses the
+IPYTHONDIR environment variable.  Unfortuneatly there is no way to customize
+the ipython directory without modifying this variable.
 
 Vipy usually looks for any open IPython kernels before starting one by itself.
 Ordinarily this works great, however if IPython crashes or is manually closed,

@@ -56,10 +56,6 @@ if !exists('g:vipy_clean_connect_files')
     let g:vipy_clean_connect_files = 1
 endif
 
-if !exists('g:vipy_ipy_dir')
-    let g:vipy_ipy_dir = 0
-endif
-
 "try
 python << EOF
 import vim
@@ -158,9 +154,6 @@ def startup():
             fullpath = find_connection_file('', profile=profile)
         except: # ... if not start one
             ipy_args = '--profile=' + profile
-            # TODO: add custom ipython directory
-            if vim.eval("g:vipy_ipy_dir") != '0':
-                ipy_args += ' --ipython-dir=' + vim.eval('g:vipy_ipy_dir')
 
             if vim.eval("has('win32')") == '1' or vim.eval("has('win64')") == '1':
                 vim.command('!start /min ipython kernel ' + ipy_args)
