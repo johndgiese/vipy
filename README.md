@@ -31,13 +31,13 @@ After searching for a while (and trying a number of dead-ends), I found [Ivanov'
 
 I am still testing my code, so if you run into bugs please post them as a git issue.
 
-I have only used it on gvim 7.3 (should work on vim 7.3) with IPython 0.14 and 0.15 on Windows 7, 64bit (should work on 32bit).
+I have tested the plugin on Ubuntu and Windows 7 (64bit and 32bit).
 
 # Installation
-* Install IPython 0.14 or 0.15
+* Install IPython 0.13 or greater
 * Install pyzmq (so that vim can talk to the IPython server)
 * Install vim with +python support (use :version to see if you have it)
-* If you are using windows 64bit, fix the manifest as described [here](https://github.com/ivanov/vim-ipython/issues/20).
+* If you are using windows, fix the manifest as described [here](https://github.com/ivanov/vim-ipython/issues/20).  The fixwindows.txt file includes more details, and a batchscript.
 * Download vipy.vim and place it in the directory .vim/ftplugin/python/vipy.vim or if you are using pathogen, in bundle/vipy/ftplugin/python/vipy.vim
 
 # Basic Usage
