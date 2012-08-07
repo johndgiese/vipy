@@ -8,150 +8,87 @@ Help on the Vipy Plugin					*vipy*
 
 1. Overview     		|vipy-overview|
 2. Starting vipy        	|vipy-startup|
-3. Working in the vipy buffer	|vipy-buffer|
+3. The vipy buffer      	|vipy-buffer|
+4. Customization                |vipy-customization|
 
 ==============================================================================
-1. Overview					*vipy-overview*
+1. Overview		                			*vipy-overview*
 
+This plugin provides a special Vim buffer that acts like the IPython terminal.  No more alt-tabbing from your editor to the interpreter!  This special buffer has the following features:
+--Search command history from previous sessions using up and down arrows
+--Appropriately handles input and raw_input requests from IPython; this allows the use of the command line python debugger
+--You can set your default IPython profile in your vimrc file (see
+--*vipy-customization*)
+--Consistent python syntax highlighting in the editor and the terminal 
+--Convenience methods for editing files (e.g. pythonObject?? will open the file where the object is defined in a new vim buffer)
 
+The plugin also provides a number of features for all python files:
 
-<Help>		or
-
-
-==============================================================================
-2. Starting vipy				*vipy-startup*
-
-It is possible to add translated help files, next to the original English help
-files.  Vim will search for all help in "doc" directories in 'runtimepath'.
-This is only available when compiled with the |+multi_lang| feature.
-
-At this moment translations are available for:
-	Chinese - multiple authors
-	French  - translated by David Blanchet
-	Italian - translated by Antonio Colombo
-	Polish  - translated by Mikolaj Machowski
-	Russian - translated by Vassily Ragosin
-See the Vim website to find them: http://www.vim.org/translations.php
-
-A set of translated help files consists of these files:
-
-	help.abx
-	howto.abx
-	...
-	tags-ab
-
-"ab" is the two-letter language code.  Thus for Italian the names are:
-
-	help.itx
-	howto.itx
-	...
-	tags-it
-
-The 'helplang' option can be set to the preferred language(s).  The default is
-set according to the environment.  Vim will first try to find a matching tag
-in the preferred language(s).  English is used when it cannot be found.
-
-To find a tag in a specific language, append "@ab" to a tag, where "ab" is the
-two-letter language code.  Example: >
-	:he user-manual@it
-	:he user-manual@en
-The first one finds the Italian user manual, even when 'helplang' is empty.
-The second one finds the English user manual, even when 'helplang' is set to
-"it".
-
-When using command-line completion for the ":help" command, the "@en"
-extension is only shown when a tag exists for multiple languages.  When the
-tag only exists for English "@en" is omitted.
-
-When using |CTRL-]| or ":help!" in a non-English help file Vim will try to
-find the tag in the same language.  If not found then 'helplang' will be used
-to select a language.
-
-Help files must use latin1 or utf-8 encoding.  Vim assumes the encoding is
-utf-8 when finding non-ASCII characters in the first line.  Thus you must
-translate the header with "For Vim version".
-
-The same encoding must be used for the help files of one language in one
-directory.  You can use a different encoding for different languages and use
-a different encoding for help files of the same language but in a different
-directory.
-
-Hints for translators:
-- Do not translate the tags.  This makes it possible to use 'helplang' to
-  specify the preferred language.  You may add new tags in your language.
-- When you do not translate a part of a file, add tags to the English version,
-  using the "tag@en" notation.
-- Make a package with all the files and the tags file available for download.
-  Users can drop it in one of the "doc" directories and start use it.
-  Report this to Bram, so that he can add a link on www.vim.org.
-- Use the |:helptags| command to generate the tags files.  It will find all
-  languages in the specified directory.
+--Smart autocomplete using IPython's object? ability
+--Execute the current visual selection with <F9>
+--Run the current file by pressing <F5>
+--<C-CR> and <S-CR> will run the current "cell" (i.e. like MATLAB's cell mode; see below for more details)
+When yo
 
 ==============================================================================
-3. The vipy buffer					*vipy-buffer*
+2. Starting vipy				                *vipy-startup*
 
-For ease of use, a Vim help file for a plugin should follow the format of the
-standard Vim help files.  If you are writing a new help file it's best to copy
-one of the existing files and use it as a template.
+Optionally press <S-F12> to clean up any dead connection files from a previous
+crash, or a manually closed kernel.
+You can start the vipy plugin by pressing <C-F12>
 
-The first line in a help file should have the following format:
+<C-F12> will look for an opened IPython kernel, but if it can't find one it
+will start one for you in a separate command window (don't close it
+manually!).  After connecting to the IPython kernel, vipy will open a new vim
+window to the right of the current vim window with a special buffer loaded in
+it, called vipy.py.
 
-*helpfile_name.txt*	For Vim version 7.3	Last change: 2010 June 4
+==============================================================================
+3. The vipy buffer				        	*vipy-buffer*
 
-The first field is a link to the help file name.  The second field describes
-the applicable Vim version.  The last field specifies the last modification
-date of the file.  Each field is separated by a tab.
+The vipy buffer has some special mappings that make it act like the IPython prompt
+--You can execute commands by pressing <S-CR>
+--Press <CR> to create a new line with "... " so that you can execute
+multi-line inputs like for loops and if statements
+--If you are in insert mode, and the cursor is at the end of the last line,
+then <up> and <down> will search the command history for all matches starting with
+the current line's content.  Pressing <up> and <down> repeatedly will loop through
+the matches; this works even for multi-line inputs such as for loops.  If the
+current line is an empty prompt, pressing <up> and <down> will loop through the
+last 50 inputs.  If the cursor is anywhere except the end of the buffer, the
+up and down arrows will act normally.
+--<F12> will goto the previously used window
+--Typing object? will print the IPython help, properly formatted.
+--Typing object?? will open the file where the object is defined in a vim buffer.
+--The vipy buffer has special syntax highlighting; input is formatted as
+usual, while standard output (except for python documentation) uses normal
+formatting.  This is an advantage over the normal IPython console, because
+vim's colorschemes are not restricted to ascii colors, and the console
+highlighting will follow the same setup you have for your regular python
+files.
+--The status of the IPython kernel is displayed in the status line of the vipy buffer
 
-At the bottom of the help file, place a Vim modeline to set the 'textwidth'
-and 'tabstop' options and the 'filetype' to 'help'.  Never set a global option
-in such a modeline, that can have consequences undesired by whoever reads that
-help.
+==============================================================================
+4. Customization                                    *vipy-customization*
 
+The following global variables can be set in your vimrc:
 
-TAGS
+The ipython profile can be set using:
+g:vipy_profile='default'
 
-To define a help tag, place the name between asterisks (*tag-name*).  The
-tag-name should be different from all the Vim help tag names and ideally
-should begin with the name of the Vim plugin.  The tag name is usually right
-aligned on a line.
+IPython has a routine for finding the ipython directory; usually it will use
+the $HOME environment variable by default.  If you want to hard-code a
+directory you can use:
+g:vipy_ipy_dir='C:\my\ipython\dir'
+Leave the value unset (or set it to "0") if you want to let ipython find the
+directory naturally.
 
-When referring to an existing help tag and to create a hot-link, place the
-name between two bars (|) eg. |help-writing|.
-
-When referring to a Vim option in the help file, place the option name between
-two single quotes, eg. 'statusline'
-
-
-HIGHLIGHTING
-
-To define a column heading, use a tilde character at the end of the line.
-This will highlight the column heading in a different color.  E.g.
-
-Column heading~
-
-To separate sections in a help file, place a series of '=' characters in a
-line starting from the first column.  The section separator line is highlighted
-differently.
-
-To quote a block of ex-commands verbatim, place a greater than (>) character
-at the end of the line before the block and a less than (<) character as the
-first non-blank on a line following the block.  Any line starting in column 1
-also implicitly stops the block of ex-commands before it.  E.g. >
-    function Example_Func()
-	echo "Example"
-    endfunction
-<
-
-The following are highlighted differently in a Vim help file:
-  - a special key name expressed either in <> notation as in <PageDown>, or
-    as a Ctrl character as in CTRL-X
-  - anything between {braces}, e.g. {lhs} and {rhs}
-
-The word "Note", "Notes" and similar automagically receive distinctive
-highlighting.  So do these:
-	*Todo	something to do
-	*Error	something wrong
-
-You can find the details in $VIMRUNTIME/syntax/help.vim
+Vipy usually looks for any open IPython kernels before starting one by itself.
+Ordinarily this works great, however if IPython crashes or is manually closed,
+the dead connection files are not cleaned up, and they confuse vipy.  By
+default vipy will remove any of these connection files when you press <S-F12>.
+This can create problems if you are connecting over a server; if you want to
+remove this auto-clean behavior, use:
+g:vipy_clean_connect_files=0
 
  vim:tw=78:ts=8:ft=help:norl:
