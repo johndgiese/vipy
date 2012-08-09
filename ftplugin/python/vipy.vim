@@ -15,6 +15,7 @@ inoremap <silent> <S-CR> <ESC>:py run_cell()<CR><ESC>i
 inoremap <silent> <C-CR> <ESC>:py run_cell(progress=True)<CR><ESC>i
 vnoremap <silent> <S-CR> :py run_cell()<CR><ESC>gv
 vnoremap <silent> <C-CR> :py run_cell(progress=True)<CR><ESC>gv
+
 " AUTO COMPLETE
 fun! CompleteIPython(findstart, base)
     if a:findstart

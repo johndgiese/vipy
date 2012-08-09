@@ -157,8 +157,8 @@ def startup():
 
             if vim.eval("has('win32')") == '1' or vim.eval("has('win64')") == '1':
                 vim.command('!start /min ipython kernel ' + ipy_args)
-            elif vim.eval("has('unix')") == '0' or vim.eval("has('mac')") == '1':
-                vim.command('!ipython kernel ' + ipy_args)
+            elif vim.eval("has('unix')") == '1' or vim.eval("has('mac')") == '1':
+                vim.command('!ipython kernel ' + ipy_args + ' &')
                 
             # try to find connection file (sometimes you need to wait a bit)
             count = 0
@@ -280,9 +280,10 @@ def setup_vib():
 
 def setup_highlighting():
     """ Setup the normal highlighting system for the current buffer. """
-    vim.command("syn region VipyNormal matchgroup=Hidden start=/^" + vib_ns + "/ end=/" + vib_ne + "$/ concealends contains=VipyNormalTrans")
+    # vim.command("syn region VipyCommand start=/\v^(\>{3} |\.{3} )\@=/ end=/\v?(\>{3} |\.{3} )\@!/ transparent keepends")
+    vim.command("syn region VipyNormal matchgroup=Hidden start=/^" + vib_ns + "/ end=/" + vib_ne + "$/ concealends contains=VipyNormalTrans keepend")
     vim.command("syn region VipyNormalTrans start=/^>>>\ \|^\.\.\.\ / end=/$/ contained transparent contains=ALLBUT,pythonDoctest,pythonDoctestValue")
-    vim.command("syn region VipyError matchgroup=Hidden start=/^" + vib_es + "/ end=/" + vib_ee + "$/ concealends contains=VipyErrorTrans")
+    vim.command("syn region VipyError matchgroup=Hidden start=/^" + vib_es + "/ end=/" + vib_ee + "$/ concealends contains=VipyErrorTrans keepend")
     vim.command("syn region VipyErrorTrans start=/^ \+\d\+ \|^-\+> \d\+ / end=/$/ contained transparent contains=ALLBUT,pythonDoctest,pythonDoctestValue")
     vim.command("hi link VipyNormal Normal")
     vim.command("hi VipyError guibg=NONE guifg=#FF7777 gui=NONE")
@@ -507,35 +508,42 @@ def shift_enter_at_prompt():
         linen = len(vib)
         while linen > 0:
             # remove the last three characters
-            cmds.append(vib[linen - 1][4:]) 
-            if vib[linen - 1].startswith(stop_str):
+            cmd = vib[linen - 1]
+            # only add the line if it isn't empty
+            if len(cmd) > 4:
+                cmds.append(cmd[4:]) 
+
+            if cmd.startswith(stop_str):
                 break
             else:
                 linen -= 1
+        if len(cmds) == 0:
+            return
         cmds.reverse()
+
 
         cmds = '\n'.join(cmds)
         if cmds == 'cls' or cmds == 'clear':
             vib[:] = None # clear the buffer
             new_prompt(append=False)
             return
-            #elif cmds.startswith('edit '):
-            #    fnames = cmds[5:].split(' ')
-            #    msg_id = km.shell_channel.execute('', user_expressions={'pwd': '%pwd'})
-            #    try:
-            #        pwd = get_child_msg(msg_id)
-            #        vib.append(repr(pwd).splitlines())
-            #        pwd = pwd['user_expressions']['pwd']
-            #    except Empty:
-            #        # timeout occurred
-            #        return echo("no reply from IPython kernel")
-            #    for fname in fnames:
-            #        try:
-            #            pp = os.path.join(pwd, fname)
-            #            vim.command('drop ' + pp)
-            #        except:
-            #            vib.append(unh("Couldn't find " + pp))
-            #    new_prompt()
+        #elif cmds.startswith('edit '):
+        #    fnames = cmds[5:].split(' ')
+        #    msg_id = km.shell_channel.execute('', user_expressions={'pwd': '%pwd'})
+        #    try:
+        #        pwd = get_child_msg(msg_id)
+        #        vib.append(repr(pwd).splitlines())
+        #        pwd = pwd['user_expressions']['pwd']
+        #    except Empty:
+        #        # timeout occurred
+        #        return echo("no reply from IPython kernel")
+        #    for fname in fnames:
+        #        try:
+        #            pp = os.path.join(pwd, fname)
+        #            vim.command('drop ' + pp)
+        #        except:
+        #            vib.append(unh("Couldn't find " + pp))
+        #    new_prompt()
         elif cmds.endswith('??'):
             msg_id = km.shell_channel.object_info(cmds[:-2])
             try:
