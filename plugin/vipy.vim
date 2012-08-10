@@ -269,7 +269,7 @@ def setup_vib():
     vim.command("au WinEnter <buffer> :python insert_at_new()")
     # not working; the idea was to make
     # vim.command("au InsertEnter <buffer> :py if above_prompt(): vim.command('normal G$')")
-    vim.command("setlocal statusline=\ \ \ %-{g:ipy_status}")
+    vim.command("setlocal statusline=\ VIPY:\ %-{g:ipy_status}")
     
     # handle syntax coloring a little better
     vim.command('call g:vipySyntax()') # avoid problems with \v being escaped in the regexps
@@ -518,7 +518,8 @@ def shift_enter_at_prompt():
             #            vib.append("Couldn't find " + pp)
             #    new_prompt()
         elif cmds.endswith('??'):
-            msg_id = km.shell_channel.object_info(cmds[:-2])
+            obj = cmds[:-2]
+            msg_id = km.shell_channel.object_info(obj)
             try:
                 content = get_child_msg(msg_id)['content']
             except Empty:
@@ -527,14 +528,46 @@ def shift_enter_at_prompt():
             if content['found']:
                 if content['file']:
                     vim.command("drop " + content['file'])
+
+                    # try to position the cursor in the source file
+                    #                    if content['source']:
+                    #                        firstNL = content['source'].find('\n')
+                    #                        if firstNL != -1:
+                    #                            firstLine = content['source'][:firstNL]
+                    #                        else:
+                    #                            firstLine = content['source']
+                    #                        cursorPositioner = re.compile(firstLine)
+                    # if content['definition']:
+                    #    cursorPositioner = re.compile(content['definition'])
+                    if content['type_name'] == 'function':
+                        deffind = re.compile('def ' + obj.split('.')[-1] + '[ (]')
+                    elif content['type_name'] == 'classobj':
+                        deffind = re.compile('class ' + obj.split('.')[-1] + '[ (]')
+                    else:
+                        deffind = False
+
+                    if deffind :
+                        for ind, line in enumerate(vim.current.buffer):
+                            if deffind.match(line):
+                                vib.append('match found at %d' % ind)
+                                break
+
                     content = None
                 else:
-                    content = "The object doesn't have a source file associated with it."
+                    content = "IPython could not find a source file associated with %s." % obj
             else:
-                content = "No object information was found.  Make sure that the requested object is in the interactive namespace."
+                content = "IPython could not find no object information associated with %s. \
+                    Make sure that the requested object is in the interactive namespace and \
+                    try again." % obj
             if content:
                 vib.append(content)
             new_prompt()
+            
+            # this is ugly to put the cursor movement here: TODO: find a better way
+            if deffind.match(line):
+                vim.current.window.cursor = (ind + 1, 0)
+
+
         elif cmds.endswith('?'):
             content = get_doc(cmds[:-1])
             if content == '':
@@ -650,7 +683,7 @@ def update_subchannel_msgs(debug=False):
         # TODO: add better error formatting
         elif msg_type == 'pyerr':
             c = m['content']
-            s = "\n".join(map(strip_color_escapes,c['traceback']))
+            s = "\n".join(map(strip_color_escapes, c['traceback']))
         elif msg_type == 'object_info_reply':
             c = m['content']
             if not c['found']:
