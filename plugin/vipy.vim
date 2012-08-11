@@ -257,9 +257,9 @@ def setup_vib():
     vim.command("syn match Normal /^>>>/")
 
     # mappings to control sending stuff from vipy
-    vim.command("inoremap <buffer> <silent> <s-cr> <ESC>:py shift_enter_at_prompt()<CR>")
-    vim.command("nnoremap <buffer> <silent> <s-cr> <ESC>:py shift_enter_at_prompt()<CR>")
     vim.command("inoremap <buffer> <silent> <cr> <ESC>:py enter_at_prompt()<CR>")
+    vim.command("nnoremap <buffer> <silent> <cr> <ESC>:py enter_at_prompt()<CR>")
+    vim.command("inoremap <buffer> <silent> <s-cr> <ESC>:py shift_enter_at_prompt()<CR>")
 
     # setup history mappings etc.
     enter_normal(first=True)
@@ -463,7 +463,7 @@ def hist_sort(hist_item):
 
 ## COMMAND LINE 
 numspace = re.compile(r'^[>.]{3}(\s*)')
-def enter_at_prompt():
+def shift_enter_at_prompt():
     if at_end_of_prompt():
         match = numspace.match(vib[-1])
         if match:
@@ -478,7 +478,7 @@ def enter_at_prompt():
         # vim.command('call feedkeys("\<CR>")')
         vim.command('normal <CR>')
 
-def shift_enter_at_prompt():
+def enter_at_prompt():
     """ Remove prompts and whitespace before sending to ipython. """
     if status == 'input requested':
         km.stdin_channel.input(vib[-1][length_of_last_input_request:])
@@ -506,24 +506,21 @@ def shift_enter_at_prompt():
         if cmds == 'cls' or cmds == 'clear':
             vib[:] = None # clear the buffer
             new_prompt(append=False)
-            return
-            #elif cmds.startswith('edit '):
-            #    fnames = cmds[5:].split(' ')
-            #    msg_id = km.shell_channel.execute('', user_expressions={'pwd': '%pwd'})
-            #    try:
-            #        pwd = get_child_msg(msg_id)
-            #        vib.append(repr(pwd).splitlines())
-            #        pwd = pwd['user_expressions']['pwd']
-            #    except Empty:
-            #        # timeout occurred
-            #        return echo("no reply from IPython kernel")
-            #    for fname in fnames:
-            #        try:
-            #            pp = os.path.join(pwd, fname)
-            #            vim.command('drop ' + pp)
-            #        except:
-            #            vib.append("Couldn't find " + pp)
-            #    new_prompt()
+        elif cmds.startswith('edit '):
+            fnames = cmds[5:].split(' ')
+            for fname in fnames:
+                try:
+                    pwd = get_ipy_pwd()
+                    pp = os.path.join(pwd, fname)
+                    vim.command('drop ' + pp)
+                except:
+                    vib.append("Couldn't find " + pp)
+        elif cmds.strip() == 'cdv':
+            try:
+                pwd = get_ipy_pwd()
+                vim.command('cd ' + pwd)
+            except:
+                vib.append("Couldn't change vim cwd to %s" % cmds.strip())
         elif cmds.endswith('??'):
             obj = cmds[:-2]
             msg_id = km.shell_channel.object_info(obj)
@@ -553,7 +550,7 @@ def shift_enter_at_prompt():
                     else:
                         deffind = False
 
-                    if deffind :
+                    if deffind:
                         for ind, line in enumerate(vim.current.buffer):
                             if deffind.match(line):
                                 vib.append('match found at %d' % ind)
@@ -571,7 +568,7 @@ def shift_enter_at_prompt():
             new_prompt()
             
             # this is ugly to put the cursor movement here: TODO: find a better way
-            if deffind.match(line):
+            if deffind and deffind.match(line):
                 vim.current.window.cursor = (ind + 1, 0)
 
 
@@ -915,6 +912,19 @@ def get_doc_buffer(level=0):
     vihb[:] = doc
 
 ## HELPER FUNCTIONS
+
+ds2ss = re.compile(r'\\\\')
+def get_ipy_pwd():
+    msg_id = km.shell_channel.execute('', user_expressions={'pwd': 'get_ipython().magic("pwd")'})
+    try:
+        pwd = get_child_msg(msg_id)
+        pwd = pwd['content']['user_expressions']['pwd'][2:-1] # remove the u'....'
+        pwd = re.sub(ds2ss, r'/', pwd)
+        return pwd
+    except Empty:
+        # timeout occurred
+        return echo("no reply from IPython kernel")
+
 def goto_vib(insert_at_end=True):
     global vib
     try:
