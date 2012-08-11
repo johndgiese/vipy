@@ -56,6 +56,12 @@ if !exists('g:vipy_clean_connect_files')
     let g:vipy_clean_connect_files = 1
 endif
 
+function! g:vipySyntax()
+    syn region VipyIn start=/\v(^\>{3})\zs/ end=/\v\ze^.{0,2}$|\ze^\>{3}|\ze^[^.>]..|\ze^.[^.>].|\ze^..[^.>]/ contains=ALL transparent keepend
+    syn region VipyOut start=/\v\zs^.{0,2}$|\zs^[^.>]..|\zs^.[^.>].|\zs^..[^.>]/ end=/\v\ze^\>{3}/ 
+    hi link VipyOut Normal
+endfunction
+
 "try
 python << EOF
 import vim
@@ -87,10 +93,6 @@ in_debugger = False
 monitor_subchannel = True   # update vipy 'shell' on every send?
 run_flags= "-i"             # flags to for IPython's run magic when using <F5>
 current_line = ''
-vib_ns = 'normalstart'      # used to signify the start of normal highlighting
-vib_ne = 'normalend'        # signify the end of normal highlighting
-vib_es = 'errorstart'
-vib_ee = 'errorend'
 
 try:
     status
@@ -241,7 +243,7 @@ def km_from_connection_file():
 
 def setup_vib():
     """ Setup vib (vipy buffer), that acts like a prompt. """
-    global vib, vib_ns, vib_ne, vib_ee, vib_es
+    global vib
     vim.command("rightbelow vnew vipy.py")
     # set the global variable for everyone to reference easily
     vib = get_vim_ipython_buffer()
@@ -267,32 +269,10 @@ def setup_vib():
     vim.command("au WinEnter <buffer> :python insert_at_new()")
     # not working; the idea was to make
     # vim.command("au InsertEnter <buffer> :py if above_prompt(): vim.command('normal G$')")
-    vim.command("setlocal statusline=\ \ \ %-{g:ipy_status}")
+    vim.command("setlocal statusline=\ VIPY:\ %-{g:ipy_status}")
     
     # handle syntax coloring a little better
-    if vim.eval("has('conceal')"): # if vim has the conceal option
-        setup_highlighting()
-    else: # otherwise, turn of the ns, ne markers
-        vib_ns = ''
-        vib_ne = ''
-        vib_es = ''
-        vib_ee = ''
-
-def setup_highlighting():
-    """ Setup the normal highlighting system for the current buffer. """
-    # vim.command("syn region VipyCommand start=/\v^(\>{3} |\.{3} )\@=/ end=/\v?(\>{3} |\.{3} )\@!/ transparent keepends")
-    vim.command("syn region VipyNormal matchgroup=Hidden start=/^" + vib_ns + "/ end=/" + vib_ne + "$/ concealends contains=VipyNormalTrans keepend")
-    vim.command("syn region VipyNormalTrans start=/^>>>\ \|^\.\.\.\ / end=/$/ contained transparent contains=ALLBUT,pythonDoctest,pythonDoctestValue")
-    vim.command("syn region VipyError matchgroup=Hidden start=/^" + vib_es + "/ end=/" + vib_ee + "$/ concealends contains=VipyErrorTrans keepend")
-    vim.command("syn region VipyErrorTrans start=/^ \+\d\+ \|^-\+> \d\+ / end=/$/ contained transparent contains=ALLBUT,pythonDoctest,pythonDoctestValue")
-    vim.command("hi link VipyNormal Normal")
-    vim.command("hi VipyError guibg=NONE guifg=#FF7777 gui=NONE")
-    vim.command("hi link VipyNormalTrans Normal")
-    vim.command("hi link VipyErrorTrans Normal")
-    vim.command("setlocal conceallevel=3")
-    vim.command('setlocal concealcursor=nvic')
-    return
-
+    vim.command('call g:vipySyntax()') # avoid problems with \v being escaped in the regexps
 
 def enter_normal(first=False):
     global vib_map, in_debugger
@@ -527,25 +507,26 @@ def shift_enter_at_prompt():
             vib[:] = None # clear the buffer
             new_prompt(append=False)
             return
-        #elif cmds.startswith('edit '):
-        #    fnames = cmds[5:].split(' ')
-        #    msg_id = km.shell_channel.execute('', user_expressions={'pwd': '%pwd'})
-        #    try:
-        #        pwd = get_child_msg(msg_id)
-        #        vib.append(repr(pwd).splitlines())
-        #        pwd = pwd['user_expressions']['pwd']
-        #    except Empty:
-        #        # timeout occurred
-        #        return echo("no reply from IPython kernel")
-        #    for fname in fnames:
-        #        try:
-        #            pp = os.path.join(pwd, fname)
-        #            vim.command('drop ' + pp)
-        #        except:
-        #            vib.append(unh("Couldn't find " + pp))
-        #    new_prompt()
+            #elif cmds.startswith('edit '):
+            #    fnames = cmds[5:].split(' ')
+            #    msg_id = km.shell_channel.execute('', user_expressions={'pwd': '%pwd'})
+            #    try:
+            #        pwd = get_child_msg(msg_id)
+            #        vib.append(repr(pwd).splitlines())
+            #        pwd = pwd['user_expressions']['pwd']
+            #    except Empty:
+            #        # timeout occurred
+            #        return echo("no reply from IPython kernel")
+            #    for fname in fnames:
+            #        try:
+            #            pp = os.path.join(pwd, fname)
+            #            vim.command('drop ' + pp)
+            #        except:
+            #            vib.append("Couldn't find " + pp)
+            #    new_prompt()
         elif cmds.endswith('??'):
-            msg_id = km.shell_channel.object_info(cmds[:-2])
+            obj = cmds[:-2]
+            msg_id = km.shell_channel.object_info(obj)
             try:
                 content = get_child_msg(msg_id)['content']
             except Empty:
@@ -554,18 +535,50 @@ def shift_enter_at_prompt():
             if content['found']:
                 if content['file']:
                     vim.command("drop " + content['file'])
+
+                    # try to position the cursor in the source file
+                    #                    if content['source']:
+                    #                        firstNL = content['source'].find('\n')
+                    #                        if firstNL != -1:
+                    #                            firstLine = content['source'][:firstNL]
+                    #                        else:
+                    #                            firstLine = content['source']
+                    #                        cursorPositioner = re.compile(firstLine)
+                    # if content['definition']:
+                    #    cursorPositioner = re.compile(content['definition'])
+                    if content['type_name'] == 'function':
+                        deffind = re.compile('def ' + obj.split('.')[-1] + '[ (]')
+                    elif content['type_name'] == 'classobj':
+                        deffind = re.compile('class ' + obj.split('.')[-1] + '[ (]')
+                    else:
+                        deffind = False
+
+                    if deffind :
+                        for ind, line in enumerate(vim.current.buffer):
+                            if deffind.match(line):
+                                vib.append('match found at %d' % ind)
+                                break
+
                     content = None
                 else:
-                    content = unh("The object doesn't have a source file associated with it.")
+                    content = "IPython could not find a source file associated with %s." % obj
             else:
-                content = unh("No object information was found.  Make sure that the requested object is in the interactive namespace.")
+                content = "IPython could not find no object information associated with %s. \
+                    Make sure that the requested object is in the interactive namespace and \
+                    try again." % obj
             if content:
                 vib.append(content)
             new_prompt()
+            
+            # this is ugly to put the cursor movement here: TODO: find a better way
+            if deffind.match(line):
+                vim.current.window.cursor = (ind + 1, 0)
+
+
         elif cmds.endswith('?'):
-            content = unh(get_doc(cmds[:-1]))
+            content = get_doc(cmds[:-1])
             if content == '':
-                content =  unh('No matches found for: %s' % cmds[:-1])
+                content =  'No matches found for: %s' % cmds[:-1]
             vib.append(content)
             new_prompt()
             return
@@ -669,7 +682,6 @@ def update_subchannel_msgs(debug=False):
             vim.command('let g:ipy_status="' + status + '"')
         elif msg_type == 'stream':
             s = strip_color_escapes(m['content']['data'])
-            s = unh(s)
         elif msg_type == 'pyout':
             s = m['content']['data']['text/plain']
         elif msg_type == 'pyin':
@@ -678,17 +690,14 @@ def update_subchannel_msgs(debug=False):
         # TODO: add better error formatting
         elif msg_type == 'pyerr':
             c = m['content']
-            s = vib_es
-            s += "\n".join(map(strip_color_escapes,c['traceback']))
-            s += vib_ee
-            # s += c['ename'] + ": " + c['evalue']
+            s = "\n".join(map(strip_color_escapes, c['traceback']))
         elif msg_type == 'object_info_reply':
             c = m['content']
             if not c['found']:
                 s = c['name'] + " not found!"
             else:
             # TODO: finish implementing this
-                s = unh(c['docstring'])
+                s = c['docstring']
         elif msg_type == 'input_request':
             s = m['content']['prompt']
             status = 'input requested'
@@ -880,8 +889,6 @@ def get_doc_buffer(level=0):
         echo(repr(word) + " not found", "Error")
         # TODO: revert to normal K
         return
-    doc[0] = vib_ns + doc[0]
-    doc[-1] = doc[-1] + doc[-1]
 
     # see if the doc window has already been made, if not create it
     try:
@@ -901,7 +908,7 @@ def get_doc_buffer(level=0):
         vim.command('map <buffer> <Esc> :q<CR>')
         vim.command('setlocal nobl')
         vim.command('resize 20')
-        setup_highlighting()
+        vim.command('call g:vipySyntax()') # avoid problems with \v being escaped in the regexps
 
     # fill the window with the correct content
     vihb[:] = None
@@ -954,25 +961,6 @@ def above_prompt():
         return True
     else:
         return False
-
-def unh(s):
-    """ Use normal highlighting.
-
-    Surround the text with syntax hints so that it uses the normal 
-    highlighting.  This is accomplished using the vib_ns and vib_ne (normal
-    start/end) strings. """ 
-    if isinstance(s, list):
-        if len(s) > 0:
-            s[0] = vib_ns + s[0]
-            s[-1] = s[-1] + vib_ne
-    else: # if it is string
-        if s == '':
-            return ''
-        if s[-1] == '\n':
-            s = vib_ns + s[:-1] + vib_ne + '\n'
-        else:
-            s = vib_ns + s + vib_ne
-    return s
 
 def is_vim_ipython_open():
     """
