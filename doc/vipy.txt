@@ -99,7 +99,16 @@ below:
   current working directory; useful for searching for files in vim
 
   edit file : this command will open the specified file relative to the
-  ipython path
+  ipython path; you can also use wild cards etc. like you can with the :edit
+  command.  The new file is opened as a buffer in the current window (so the
+  vipy buffer will now be hidden behind the other buffers.  You can get it
+  back using by pressing <F12>)
+
+  sedit file : same as edit, but opens the file in a new window, split from
+  the current window
+
+  vedit file : same as edit, but opens the file in a new window, split
+  vertically from the current window
 
   cls or clear : clear the vipy buffer
 

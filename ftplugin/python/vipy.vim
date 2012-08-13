@@ -54,8 +54,7 @@ if complete_type in ['method','normal']:
     except Empty:
         echo("no reply from IPython kernel")
 elif complete_type == 'argument':
-    # get the object 
-    oname = 'a'
+    # TODO: make this more robust (perhaps by inspecting the function directly, instead of using ipython...
     count = int(vim.eval("col('.')")) - 2 # one for indexing, one for cursor
     o_start = count
     o_end = count
@@ -67,12 +66,14 @@ elif complete_type == 'argument':
             break
         count = count - 1
     oname = cl[o_start:o_end]
+    # vib.append(oname)
 
     # request object info from ipython
-    msg_id = km.shell_channel.object_info(oname,detail_level=1)
+    msg_id = km.shell_channel.object_info(oname, detail_level=1)
 
     try:
         m = get_child_msg(msg_id)
+        # vib.append(repr(m))
         if m['content']['found'] and m['content']['argspec']:
             completions = m['content']['argspec']['args']
     except Empty:

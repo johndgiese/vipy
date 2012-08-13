@@ -506,13 +506,18 @@ def enter_at_prompt():
         if cmds == 'cls' or cmds == 'clear':
             vib[:] = None # clear the buffer
             new_prompt(append=False)
-        elif cmds.startswith('edit '):
+        elif cmds.startswith('edit ') or cmds.startswith('vedit ') or cmds.startswith('sedit '):
             fnames = cmds[5:].split(' ')
             for fname in fnames:
                 try:
                     pwd = get_ipy_pwd()
                     pp = os.path.join(pwd, fname)
-                    vim.command('drop ' + pp)
+                    if cmds[0] == 'e':
+                        vim.command('edit ' + pp)
+                    elif cmds[0] == 'v':
+                        vim.command('vsp ' + pp)
+                    else: # ... if cmds[0] == 's':
+                        vim.command('sp ' + pp)
                 except:
                     vib.append("Couldn't find " + pp)
         elif cmds.strip() == 'cdv':
