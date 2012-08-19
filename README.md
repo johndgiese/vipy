@@ -37,7 +37,7 @@ I have tested the plugin on Ubuntu and Windows 7 (64bit and 32bit).
 * Install IPython 0.13 or greater
 * Install pyzmq (so that vim can talk to the IPython server)
 * Install vim with +python support (use :version to see if you have it)
-* If you are using windows, fix the manifest as described [here](https://github.com/ivanov/vim-ipython/issues/20).  The fixwindows.txt file includes more details, and a batchscript.
+* If you are using windows, fix the manifest as described in fixwindows.txt the file.  Basically you need to make sure that mt.exe (a manifest fixing program) is on the windows path, and then you need to run win64fix.bat or win32fix.bat
 * Download vipy.vim and place it in the directory .vim/ftplugin/python/vipy.vim or if you are using pathogen, in bundle/vipy/ftplugin/python/vipy.vim
 
 # Basic Usage
