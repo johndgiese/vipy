@@ -244,7 +244,7 @@ def km_from_connection_file():
 def setup_vib():
     """ Setup vib (vipy buffer), that acts like a prompt. """
     global vib
-    vim.command("rightbelow vnew vipy.py")
+    vim.command("drop vipy.py")
     # set the global variable for everyone to reference easily
     vib = get_vim_ipython_buffer()
     new_prompt(append=False)
@@ -257,9 +257,9 @@ def setup_vib():
     vim.command("syn match Normal /^>>>/")
 
     # mappings to control sending stuff from vipy
-    vim.command("inoremap <buffer> <silent> <cr> <ESC>:py enter_at_prompt()<CR>")
-    vim.command("nnoremap <buffer> <silent> <cr> <ESC>:py enter_at_prompt()<CR>")
-    vim.command("inoremap <buffer> <silent> <s-cr> <ESC>:py shift_enter_at_prompt()<CR>")
+    vim.command('inoremap <expr> <buffer> <silent> <s-cr> pumvisible() ? "\<ESC>:py print_completions()\<CR>" : "\<ESC>:py shift_enter_at_prompt()\<CR>"')
+    vim.command('nnoremap <buffer> <silent> <cr> <ESC>:py enter_at_prompt()<CR>')
+    vim.command('inoremap <expr> <buffer> <silent> <cr> pumvisible() ? "<CR>" : "\<ESC>:py enter_at_prompt()\<CR>"')
 
     # setup history mappings etc.
     enter_normal(first=True)
@@ -478,6 +478,24 @@ def shift_enter_at_prompt():
         # vim.command('call feedkeys("\<CR>")')
         vim.command('normal <CR>')
 
+def print_completions():
+    # grab current input
+    # TODO: make this work for multi-line input
+    if len(completions) > 2:
+        input_length = 1
+        input = vib[-input_length:]
+        del vib[-input_length]
+        
+        # print completions
+        # TODO: make this print on multiple columns
+        if len(vib) == 1:
+            vib[0] = completions[1]
+        else:
+            vib[-1] = completions[1]
+        vib.append(completions[2:])
+        vib.append(input)
+        goto_vib()
+
 def enter_at_prompt():
     """ Remove prompts and whitespace before sending to ipython. """
     if status == 'input requested':
@@ -537,6 +555,7 @@ def enter_at_prompt():
             if content['found']:
                 if content['file']:
                     vim.command("drop " + content['file'])
+                    vim.command("set syntax=python")
 
                     # try to position the cursor in the source file
                     #                    if content['source']:
@@ -575,6 +594,8 @@ def enter_at_prompt():
             # this is ugly to put the cursor movement here: TODO: find a better way
             if deffind and deffind.match(line):
                 vim.current.window.cursor = (ind + 1, 0)
+            else:
+                vim.current.window.cursor = (1, 0)
 
 
         elif cmds.endswith('?'):

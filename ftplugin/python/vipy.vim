@@ -25,7 +25,7 @@ fun! CompleteIPython(findstart, base)
         python complete_type = 'normal'
         while start > 0
             "python vib.append('cc: %s' % vim.eval('line[start-1]'))
-            if line[start-1] !~ '\w\|\.'
+            if line[start-1] !~ '\w\|\.\|\/'
                 if line[start-1] == '('
                     python complete_type = 'argument'
                 endif
