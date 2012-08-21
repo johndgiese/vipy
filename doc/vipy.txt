@@ -10,9 +10,10 @@ Help on the Vipy Plugin					*vipy*
 2. Starting vipy                              |vipy-startup|
 3. The vipy buffer                            |vipy-buffer|
 4. Extra functionailty in python files        |vipy-pyfiles|
-5. Customization                              |vipy-customization|
-6. Issues                                     |vipy-issues|
-7. Credits                                    |vipy-credits|
+5. Autocomplete                               |vipy-complete|
+6. Customization                              |vipy-customization|
+7. Issues                                     |vipy-issues|
+8. Credits                                    |vipy-credits|
 
 ==============================================================================
 1. Overview		                			*vipy-overview*
@@ -79,7 +80,10 @@ window open.
 
 Typing object? will print the IPython help, properly formatted.
 
-Typing object?? will open the file where the object is defined in a vim buffer.
+Typing object?? will open the file and place the cursor where the object is
+defined in a vim buffer.  If the object is a module, the cursor will be placed
+at the top of the file.  If the file is already opened, vipy will switch to
+it.
 
 The vipy buffer has special syntax highlighting; input is formatted as
 usual, while standard output (except for python documentation) uses normal
@@ -146,16 +150,32 @@ program. Cell mode is useful for situations where you want to load data once,
 but execute some analysis of that data multiple times
 
 ==============================================================================
-5. Customization                                    *vipy-customization*
+5. Complete                                         *vipy-complete*
+
+VIPY provides a user-complete that querys the IPython kernel for information
+about an object.  By default this is accessed using <C-xC-u>, however I
+strongly reccomend that you install the SuperTab plugin, so that you can use
+TAB instead. 
+
+For example,
+>>> a = [1,2,3,4]
+>>> a.|
+if you start the autocompete at | This would bring up a menu with a number of
+options: a.append, a.count, etc. which you could scroll through (<C-N> and
+<C-P> by default, <tab> and <s-tab> if you have supertab installed).
+
+If you are in the command prompt, you can now press <S-CR> to print the
+options actually into the buffer.  This is useful if you want to search the
+output, or there are too many options to see on one screen.
+
+==============================================================================
+6. Customization                                    *vipy-customization*
 
 The following global variables can be set in your vimrc:
 
 The ipython profile can be set using:
     g:vipy_profile='default'
-
-IPython has a routine for finding the ipython directory that uses the
-IPYTHONDIR environment variable.  Unfortuneatly there is no way to customize
-the ipython directory without modifying this variable.
+If the profile does not exist, vipy will create a new profile by that name.
 
 Vipy usually looks for any open IPython kernels before starting one by itself.
 Ordinarily this works great, however if IPython crashes or is manually closed,
@@ -166,7 +186,7 @@ remove this auto-clean behavior, use:
     g:vipy_clean_connect_files=0
 
 ==============================================================================
-6. Issues                                       *vipy-issues*
+7. Issues                                       *vipy-issues*
 
 If the server is unresponsive, close it using <S-F12>, and reopen it again by
 pressing <C-F12>.  This will clean out any old connection files that may be
@@ -185,7 +205,19 @@ no way around this short of modifying the default python syntax files.  I
 guess it is the price of having vim's syntax highlighting work in the prompt.
 If it really bothers you just clear vipy using >>> cls or >>> clear
 
+IPython has a routine for finding the ipython directory that uses the
+IPYTHONDIR environment variable.  Unfortuneatly there is no way to customize
+the ipython directory without modifying this variable, and as a result IPython
+doesn't always find the correct directory.
+
 ==============================================================================
-7. Credits                                          *vipy-credits*
+8. Credits                                          *vipy-credits*
+
+* Paul Ivanov for his vim-ipython plugin which got me started.
+* Prof. Jerome Mertz at Boston University for being a great PI.
+* Fernando Perez for writing IPython.
+* Bram Moolenaar for writing Vim.
+
+
 
  vim:tw=78:ts=8:ft=help:norl:
