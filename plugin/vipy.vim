@@ -264,7 +264,7 @@ def setup_vib():
     # mappings to control sending stuff from vipy
     vim.command('inoremap <expr> <buffer> <silent> <s-cr> pumvisible() ? "\<ESC>:py print_completions()\<CR>" : "\<ESC>:py shift_enter_at_prompt()\<CR>"')
     vim.command('nnoremap <buffer> <silent> <cr> <ESC>:py enter_at_prompt()<CR>')
-    vim.command('inoremap <expr> <buffer> <silent> <cr> pumvisible() ? "<CR>" : "\<ESC>:py enter_at_prompt()\<CR>"')
+    vim.command('inoremap <buffer> <silent> <cr> <ESC>:py enter_at_prompt()<CR>')
 
     # setup history mappings etc.
     enter_normal(first=True)
@@ -297,10 +297,10 @@ def enter_normal(first=False):
     # unmap debug codes
     if not first:
         try:
-            vim.command("nunmap <F10>")
-            vim.command("nunmap <F11>")
-            vim.command("nunmap <C-F11>")
-            vim.command("nunmap <S-F5>")
+            vim.command("nunmap <buffer> <F10>")
+            vim.command("nunmap <buffer> <F11>")
+            vim.command("nunmap <buffer> <C-F11>")
+            vim.command("nunmap <buffer> <S-F5>")
         except vim.error:
             pass
 
@@ -483,21 +483,45 @@ def shift_enter_at_prompt():
         # vim.command('call feedkeys("\<CR>")')
         vim.command('normal <CR>')
 
+from math import ceil
 def print_completions():
+    """ Print the current completions into the vib buffer.
+
+    This helps when there are a lot of completions, or you want
+    to use them as a reference. """
     # grab current input
-    # TODO: make this work for multi-line input
     if len(completions) > 2:
+        # TODO: make this work on multi-line input
+        # Save the original input
+        del completions[0]
         input_length = 1
         input = vib[-input_length:]
         del vib[-input_length]
         
-        # print completions
-        # TODO: make this print on multiple columns
+        # format the text from the list of completions
+        vib_width = vim.current.window.width
+        max_comp_len = max([len(c) for c in completions]) + 1
+        num_col = int(vib_width/max_comp_len)
+        comp_per_col = int(ceil(len(completions)/float(num_col)))
+        if num_col == 0:
+            num_col = 1
+        
+        # a list of lists of strings on each line
+        formatted = [] # the formatted lines
+        on_line = [completions[i::comp_per_col] for i in xrange(comp_per_col)] 
+        for line in on_line:
+            for ind, c in enumerate(line):
+                line[ind] = c.ljust(max_comp_len)
+            formatted.append(''.join(line))
+
+        # append the completions
         if len(vib) == 1:
-            vib[0] = completions[1]
+            vib[0] = formatted[1]
         else:
-            vib[-1] = completions[1]
-        vib.append(completions[2:])
+            vib[-1] = formatted[1]
+        vib.append( formatted)
+
+        # then append the old input and scroll to the bottom
         vib.append(input)
         goto_vib()
 
