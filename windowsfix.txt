@@ -1,0 +1,105 @@
+There is a bug in pyzmq that only seems to show up on windows 64bit or 32bit.  Fortuneatly there is a reasnobly simple solution:
+
+First make sure you didn't install pyzmq with easy_install.  Instead, you want to install the binary from here:
+
+http://pypi.python.org/pypi/pyzmq/2.2.0.1
+
+When you are done with this, you will need to find a copy of microsofts mt.exe
+
+One possible spot to look is:
+Program Files/Windows SDK/
+
+This executable comes with the windows SDK, but you can probably find it other places online.
+
+Once you have found mt.exe either add that directory to the windows path (search online if you don't know what this means) or you can copy win32fix.bat or win64fix.bat to that directory so that when you run it it can find mt.exe
+
+You now have a batch file (that knows where to find mt.exe) that will clean up the manifest of all the pyd and dlls in pyzmq.  Run the bat file (you can simply double click it in the file browser).  You should see some output like this:
+
+C:\Users\jdgiese\Desktop>mt.exe -inputresource:C:\Windows\SysWOW64\python27.dll;
+#2 -outputresource:C:\Python27\Lib\site-packages\zmq\core\constants.pyd;#2
+Microsoft (R) Manifest Tool version 6.1.7716.0
+Copyright (c) Microsoft Corporation 2009.
+All rights reserved.
+
+C:\Users\jdgiese\Desktop>mt.exe -inputresource:C:\Windows\SysWOW64\python27.dll;
+#2 -outputresource:C:\Python27\Lib\site-packages\zmq\core\context.pyd;#2
+Microsoft (R) Manifest Tool version 6.1.7716.0
+Copyright (c) Microsoft Corporation 2009.
+All rights reserved.
+
+C:\Users\jdgiese\Desktop>mt.exe -inputresource:C:\Windows\SysWOW64\python27.dll;
+#2 -outputresource:C:\Python27\Lib\site-packages\zmq\core\device.pyd;#2
+Microsoft (R) Manifest Tool version 6.1.7716.0
+Copyright (c) Microsoft Corporation 2009.
+All rights reserved.
+
+C:\Users\jdgiese\Desktop>mt.exe -inputresource:C:\Windows\SysWOW64\python27.dll;
+#2 -outputresource:C:\Python27\Lib\site-packages\zmq\core\error.pyd;#2
+Microsoft (R) Manifest Tool version 6.1.7716.0
+Copyright (c) Microsoft Corporation 2009.
+All rights reserved.
+
+C:\Users\jdgiese\Desktop>mt.exe -inputresource:C:\Windows\SysWOW64\python27.dll;
+#2 -outputresource:C:\Python27\Lib\site-packages\zmq\core\message.pyd;#2
+Microsoft (R) Manifest Tool version 6.1.7716.0
+Copyright (c) Microsoft Corporation 2009.
+All rights reserved.
+
+C:\Users\jdgiese\Desktop>mt.exe -inputresource:C:\Windows\SysWOW64\python27.dll;
+#2 -outputresource:C:\Python27\Lib\site-packages\zmq\core\socket.pyd;#2
+Microsoft (R) Manifest Tool version 6.1.7716.0
+Copyright (c) Microsoft Corporation 2009.
+All rights reserved.
+
+C:\Users\jdgiese\Desktop>mt.exe -inputresource:C:\Windows\SysWOW64\python27.dll;
+#2 -outputresource:C:\Python27\Lib\site-packages\zmq\core\stopwatch.pyd;#2
+Microsoft (R) Manifest Tool version 6.1.7716.0
+Copyright (c) Microsoft Corporation 2009.
+All rights reserved.
+
+C:\Users\jdgiese\Desktop>mt.exe -inputresource:C:\Windows\SysWOW64\python27.dll;
+#2 -outputresource:C:\Python27\Lib\site-packages\zmq\core\_poll.pyd;#2
+Microsoft (R) Manifest Tool version 6.1.7716.0
+Copyright (c) Microsoft Corporation 2009.
+All rights reserved.
+
+C:\Users\jdgiese\Desktop>mt.exe -inputresource:C:\Windows\SysWOW64\python27.dll;
+#2 -outputresource:C:\Python27\Lib\site-packages\zmq\core\_version.pyd;#2
+Microsoft (R) Manifest Tool version 6.1.7716.0
+Copyright (c) Microsoft Corporation 2009.
+All rights reserved.
+
+C:\Users\jdgiese\Desktop>mt.exe -inputresource:C:\Windows\SysWOW64\python27.dll;
+#2 -outputresource:C:\Python27\Lib\site-packages\zmq\devices\monitoredqueue.pyd;
+#2
+Microsoft (R) Manifest Tool version 6.1.7716.0
+Copyright (c) Microsoft Corporation 2009.
+All rights reserved.
+
+C:\Users\jdgiese\Desktop>mt.exe -inputresource:C:\Windows\SysWOW64\python27.dll;
+#2 -outputresource:C:\Python27\Lib\site-packages\zmq\utils\initthreads.pyd;#2
+Microsoft (R) Manifest Tool version 6.1.7716.0
+Copyright (c) Microsoft Corporation 2009.
+All rights reserved.
+
+C:\Users\jdgiese\Desktop>mt.exe -inputresource:C:\Windows\SysWOW64\python27.dll;
+#2 -outputresource:C:\Python27\Lib\site-packages\zmq\utils\rebuffer.pyd;#2
+Microsoft (R) Manifest Tool version 6.1.7716.0
+Copyright (c) Microsoft Corporation 2009.
+All rights reserved.
+
+C:\Users\jdgiese\Desktop>mt.exe -inputresource:C:\Windows\SysWOW64\python27.dll;
+#2 -outputresource:C:\Python27\Lib\site-packages\zmq\libzmq.dll;#2
+Microsoft (R) Manifest Tool version 6.1.7716.0
+Copyright (c) Microsoft Corporation 2009.
+All rights reserved.
+
+C:\Users\jdgiese\Desktop>PAUSE
+Press any key to continue . . .
+
+There are a few possible reasons there would be errors:
+1. you installed zmq with easy_install, in which case the zmq directory will probably be a bit different
+2. you don't have the sysWOW64 directory ... this means you should be using win32fix.bat instead of win63fix.bat
+3. you are using a different version of pyzmq than I am when I wrote this; in this case you will want to update the .bat file with all of the .pyd and .dll files in the zmq directory, and rerun it.
+
+It is important to get every dll and pyd file!  IF even one isn't fixed, it probably won't work.
