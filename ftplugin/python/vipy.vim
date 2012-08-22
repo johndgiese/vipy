@@ -1,16 +1,17 @@
 " PYTHON FILE MAPPINGS
 nnoremap <silent> <F5> :wa<CR>:py run_this_file()<CR><ESC>l
 inoremap <silent> <F5> <ESC>:wa<CR>:py run_this_file()<CR>li
-noremap  <silent> K :py get_doc_buffer()<CR>
+" TODO: make K print currentword? in the buffer
+" noremap  <silent> K :py get_doc_buffer()<CR>
 vnoremap <silent> <F9> y:py run_these_lines()<CR><ESC>
 nnoremap <silent> <F9> :py run_this_line()<CR><ESC>j
 noremap  <silent> <F12> :py toggle_vib()<CR>
 inoremap <silent> <F12> <ESC>:py toggle_vib()<CR>
 
 " CELL MODE MAPPINGS
-nnoremap <silent> <S-CR> :py run_cell()<CR><ESC>
+nnoremap <expr> <silent> <S-CR> pumvisible() ? "\<ESC>:py print_completions(invipy=False)\<CR>i" : "\<ESC>:py run_cell()\<CR>\<ESC>i"
 nnoremap <silent> <C-CR> :py run_cell(progress=True)<CR><ESC>
-inoremap <silent> <S-CR> <ESC>:py run_cell()<CR><ESC>i
+inoremap <expr> <silent> <S-CR> pumvisible() ? "\<ESC>:py print_completions(invipy=False)\<CR>i" : "\<ESC>:py run_cell()\<CR>\<ESC>i"
 inoremap <silent> <C-CR> <ESC>:py run_cell(progress=True)<CR><ESC>i
 vnoremap <silent> <S-CR> :py run_cell()<CR><ESC>gv
 vnoremap <silent> <C-CR> :py run_cell(progress=True)<CR><ESC>gv
@@ -40,6 +41,7 @@ fun! CompleteIPython(findstart, base)
 cl = vim.current.line
 base = vim.eval('a:base')
 completions = ['']
+indent_or_period = re.compile(r'[a-zA-Z0-9_.]')
 if complete_type in ['method','normal']:
     msg_id = km.shell_channel.complete(base, cl, vim.eval("col('.')"))
     try:

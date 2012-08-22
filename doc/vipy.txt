@@ -129,10 +129,7 @@ functionality for regular python files.
 <F9> in normal mode will execute the current line, and progress to the next
   line, so that you "step" through a simple file by pressing F9 repeatedly.
 
-<K> in normal mode will open the documentation for the word that the cursor is
-on, in a new window. While in this documentation window, pressing K again will
-move the cursor back to the previous spot (while keeping the window open).
-Pressing q or ESC from within the documentation buffer will close it.
+<K> in normal mode will print the ipython help for the word under the cursor.
 
 Pressing <F12> will drop the vipy buffer in the current window if it isn't
 currently opened in any vim window, otherwise it will move the cursor to the
@@ -164,9 +161,12 @@ if you start the autocompete at | This would bring up a menu with a number of
 options: a.append, a.count, etc. which you could scroll through (<C-N> and
 <C-P> by default, <tab> and <s-tab> if you have supertab installed).
 
-If you are in the command prompt, you can now press <S-CR> to print the
-options actually into the buffer.  This is useful if you want to search the
-output, or there are too many options to see on one screen.
+Once the completion list is open, pressing <S-CR> will print the all the
+options actually onto the vipy buffer.  This is useful if you want to search
+the output, or there are too many options to see on one screen.
+
+Note that the autocomplete will not working if IPython is busy, as indicated
+in the status bar of the vipy buffer.
 
 ==============================================================================
 6. Customization                                    *vipy-customization*
@@ -174,8 +174,18 @@ output, or there are too many options to see on one screen.
 The following global variables can be set in your vimrc:
 
 The ipython profile can be set using:
+
     g:vipy_profile='default'
+
 If the profile does not exist, vipy will create a new profile by that name.
+
+The position of the vipy buffer that is generated when pressing <C-F12> is
+dictated by the folloing global variable:
+
+    g:vipy_position='rightbelow'
+
+Valid options include: vertical, leftabove, aboveleft, rightbelow, belowright,
+topleft, and botright (See |opening-window|, towards the bottom of the section)
 
 Vipy usually looks for any open IPython kernels before starting one by itself.
 Ordinarily this works great, however if IPython crashes or is manually closed,
@@ -183,6 +193,7 @@ the dead connection files are not cleaned up, and they confuse vipy.  By
 default vipy will remove any of these connection files when you press <S-F12>.
 This can create problems if you are connecting over a server; if you want to
 remove this auto-clean behavior, use:
+
     g:vipy_clean_connect_files=0
 
 ==============================================================================
@@ -217,7 +228,5 @@ doesn't always find the correct directory.
 * Prof. Jerome Mertz at Boston University for being a great PI.
 * Fernando Perez for writing IPython.
 * Bram Moolenaar for writing Vim.
-
-
 
  vim:tw=78:ts=8:ft=help:norl:

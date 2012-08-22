@@ -52,6 +52,10 @@ if !exists('g:vipy_profile')
     let g:vipy_profile = 'default'
 endif
 
+if !exists('g:vipy_position')
+    let g:vipy_position = 'rightbelow'
+endif
+
 if !exists('g:vipy_clean_connect_files')
     let g:vipy_clean_connect_files = 1
 endif
@@ -249,7 +253,8 @@ def km_from_connection_file():
 def setup_vib():
     """ Setup vib (vipy buffer), that acts like a prompt. """
     global vib
-    vim.command("drop vipy.py")
+    vipy_pos = vim.eval('g:vipy_position')
+    vim.command(vipy_pos + " new vipy.py")
     # set the global variable for everyone to reference easily
     vib = get_vim_ipython_buffer()
     new_prompt(append=False)
@@ -484,7 +489,7 @@ def shift_enter_at_prompt():
         vim.command('normal <CR>')
 
 from math import ceil
-def print_completions():
+def print_completions(invipy=True):
     """ Print the current completions into the vib buffer.
 
     This helps when there are a lot of completions, or you want
@@ -496,34 +501,38 @@ def print_completions():
         del completions[0]
         input_length = 1
         input = vib[-input_length:]
-        del vib[-input_length]
         
         # format the text from the list of completions
         vib_width = vim.current.window.width
-        max_comp_len = max([len(c) for c in completions]) + 1
+        max_comp_len = max([len(c) for c in completions]) + 1 # 1 is for the space
         num_col = int(vib_width/max_comp_len)
-        comp_per_col = int(ceil(len(completions)/float(num_col)))
         if num_col == 0:
             num_col = 1
+        comp_per_col = int(ceil(len(completions)/float(num_col)))
         
         # a list of lists of strings on each line
         formatted = [] # the formatted lines
         on_line = [completions[i::comp_per_col] for i in xrange(comp_per_col)] 
         for line in on_line:
-            for ind, c in enumerate(line):
-                line[ind] = c.ljust(max_comp_len)
-            formatted.append(''.join(line))
+            tmp = ''
+            for comp in line:
+                tmp += comp.ljust(max_comp_len)
+            formatted.append(tmp)
 
         # append the completions
         if len(vib) == 1:
-            vib[0] = formatted[1]
+            vib[0] = formatted[0]
         else:
-            vib[-1] = formatted[1]
-        vib.append( formatted)
+            vib[-1] = formatted[0]
+        if len(formatted) > 1:
+            vib.append(formatted[1:])
 
         # then append the old input and scroll to the bottom
         vib.append(input)
         goto_vib()
+        if not invipy:
+            toggle_vib()
+
 
 def enter_at_prompt():
     """ Remove prompts and whitespace before sending to ipython. """
@@ -825,7 +834,11 @@ def with_subchannel(f, *args, **kwargs):
 
 @with_subchannel
 def run_this_file():
-    msg_id = send("run %s %s" % (run_flags, repr(vim.current.buffer.name)[1:-1]))
+    fname = repr(vim.current.buffer.name) # use repr to avoid escapes
+    fname = fname.rstrip('ru') # remove r or u if it is raw or unicode
+    fname = fname[1:-1] # remove the quotations
+    fname = fname.replace('\\\\','\\')
+    msg_id = send("run %s %s" % (run_flags, fname))
 
 @with_subchannel
 def run_this_line():
@@ -926,45 +939,11 @@ def get_doc_msg(msg_id):
                 b.extend(c.splitlines())
     return b
 
-def get_doc_buffer(level=0):
-    global vihb
-    if status == 'busy':
-        echo("Can't query for Help When IPython is busy.  Do you have figures opened?")
-        return
-    if km is None:
-        echo("Not connected to the IPython kernel... Type CTRL-F12 to start it.")
-
-    # empty string in case vim.eval return None
+def print_help():
     word = vim.eval('expand("<cfile>")') or ''
     doc = get_doc(word)
     if len(doc) == 0 :
-        echo(repr(word) + " not found", "Error")
-        # TODO: revert to normal K
-        return
-
-    # see if the doc window has already been made, if not create it
-    try:
-        vihb
-    except:
-        vihb = None
-    if not vihb:
-        vim.command('new vipy-help.py')
-        vihb = vim.current.buffer
-        vim.command("setlocal nonumber")
-        vim.command("setlocal bufhidden=hide buftype=nofile ft=python noswf nobl")
-        vim.command("noremap <buffer> K <C-w>p")
-        # doc window quick quit keys: 'q' and 'escape'
-        vim.command('noremap <buffer> q :q<CR>')
-        # Known issue: to enable the use of arrow keys inside the terminal when
-        # viewing the documentation, comment out the next line
-        vim.command('map <buffer> <Esc> :q<CR>')
-        vim.command('setlocal nobl')
-        vim.command('resize 20')
-        vim.command('call g:vipySyntax()') # avoid problems with \v being escaped in the regexps
-
-    # fill the window with the correct content
-    vihb[:] = None
-    vihb[:] = doc
+        vib.append(doc)
 
 ## HELPER FUNCTIONS
 
@@ -997,7 +976,7 @@ def goto_vib(insert_at_end=True):
             vim.command('normal G')
             vim.command('startinsert!')
     except:
-        echo("It appears that the vipy.py buffer was deleted.  You can create a new one without reseting the python server (and losing any variables in the interactive namespace) by running the command :python setup_vib(), or you can reset the server by pressing SHIFT-F12 to shutdown the server, and then CTRL-F12 to start it up again along with a new vipy buffer.")
+        echo("It appears that the vipy.py buffer was deleted.  If the ipython kernel is still open, you can create a new vipy buffer without reseting the python server by pressing CTRL-F12.  If the ipython server is no longer available, reset the server by pressing SHIFT-F12 and then CTRL-F12 to start it up again along with a new vipy buffer.")
         vib = None
 
 def toggle_vib():
@@ -1084,7 +1063,6 @@ strip = re.compile('\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]')
 def strip_color_escapes(s):
     return strip.sub('',s)
 
-indent_or_period = re.compile(r'[a-zA-Z0-9_.]')
 EOF
 
 noremap <silent> <C-F12> :py startup()<CR>
