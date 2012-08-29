@@ -66,7 +66,36 @@ function! g:vipySyntax()
     hi link VipyOut Normal
 endfunction
 
-"try
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+" just for development: the line numbers in errors are now offset by 100
 python << EOF
 import vim
 import sys
@@ -164,6 +193,16 @@ def startup():
         try:
             # see if there is already an IPython instance open ...
             fullpath = find_connection_file('', profile=profile)
+
+            # TODO: figure out a cleaner way
+            # if clean_connect_files option is selected remove connection files, and raise an error to get into the except block
+            if vim.eval('g:vipy_clean_connect_files'):
+                connect_dir = os.path.dirname(fullpath)
+                connect_files = [p for p in os.listdir(connect_dir) if p.endswith('.json')]
+                for p in connect_files:
+                    os.remove(os.path.join(connect_dir, p))
+                fullpath = None
+                raise Exception
         except: # ... if not start one
             ipy_args = '--profile=' + profile
 
@@ -215,12 +254,6 @@ def shutdown():
         else:
             echo('The kernel must have already shut down.')
 
-        if vim.eval('g:vipy_clean_connect_files'):
-            import os
-            connect_dir = os.path.dirname(fullpath)
-            connect_files = [p for p in os.listdir(connect_dir) if p.endswith('.json')]
-            for p in connect_files:
-                os.remove(os.path.join(connect_dir, p))
 
     del(km)
     km = None
@@ -260,7 +293,7 @@ def setup_vib():
     new_prompt(append=False)
 
     vim.command("setlocal nonumber")
-    vim.command("setlocal bufhidden=hide buftype=nofile ft=python noswf nobl")
+    vim.command("setlocal bufhidden=hide buftype=nofile ft=python noswf")
     # turn of auto indent (there is some custom indenting that accounts
     # for the prompt).  See vim-tip 330
     vim.command("setl noai nocin nosi inde=") 
@@ -590,6 +623,7 @@ def enter_at_prompt():
             except Empty:
                 # timeout occurred
                 return echo("no reply from IPython kernel")
+            deffind = False
             if content['found']:
                 if content['file']:
                     vim.command("drop " + content['file'])
@@ -610,7 +644,8 @@ def enter_at_prompt():
                     elif content['type_name'] == 'classobj':
                         deffind = re.compile('class ' + obj.split('.')[-1] + '[ (]')
                     else:
-                        deffind = False
+                        deffind = re.compile(obj.split('.')[-1] + '[ (]')
+
 
                     if deffind:
                         for ind, line in enumerate(vim.current.buffer):
@@ -970,7 +1005,7 @@ def get_ipy_pwd():
 def goto_vib(insert_at_end=True):
     global vib
     try:
-        name = vib.name
+        name = get_vim_ipython_buffer().name
         vim.command('drop ' + name)
         if insert_at_end:
             vim.command('normal G')

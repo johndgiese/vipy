@@ -187,14 +187,26 @@ dictated by the folloing global variable:
 Valid options include: vertical, leftabove, aboveleft, rightbelow, belowright,
 topleft, and botright (See |opening-window|, towards the bottom of the section)
 
-Vipy usually looks for any open IPython kernels before starting one by itself.
-Ordinarily this works great, however if IPython crashes or is manually closed,
-the dead connection files are not cleaned up, and they confuse vipy.  By
-default vipy will remove any of these connection files when you press <S-F12>.
-This can create problems if you are connecting over a server; if you want to
-remove this auto-clean behavior, use:
+Vipy connects to the ipython kernel using a json file in the security
+subdirectory of the ipython profile (~/.python/).  The default behavior is to
+close all the previous connection files before starting up vipy.  This is
+usually fine, unless you want to connect to a previous ipython kernel.  You
+may want to do this for a few reasons:
+* You want to connect multiple vim instances to a single kernel
+* You want to connect to a kernel that is being used by another ipython
+  frontend
+* You want to connect to a kernel over the network
+* You have valuable data in the ipython kernel, and you want to be able to
+  reconnect to it even if vim crashes.
+
+If you are interested in any of these behaviours, then set
 
     g:vipy_clean_connect_files=0
+
+in your vimrc.  The cost of this is dealing with dead connection files.  If
+there is a dead connection file, caused if IPython crashes or is manually closed,
+the dead connection files are not cleaned up, and they confuse vipy.  In this
+case you will need to manually clean up the files.
 
 ==============================================================================
 7. Issues                                       *vipy-issues*
