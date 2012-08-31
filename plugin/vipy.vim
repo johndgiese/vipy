@@ -49,15 +49,15 @@ let g:ipy_status="idle"
 
 " let the user specify the IPython profile they want to use
 if !exists('g:vipy_profile')
-    let g:vipy_profile = 'default'
+    let g:vipy_profile='default'
 endif
 
 if !exists('g:vipy_position')
-    let g:vipy_position = 'rightbelow'
+    let g:vipy_position='rightbelow'
 endif
 
 if !exists('g:vipy_clean_connect_files')
-    let g:vipy_clean_connect_files = 1
+    let g:vipy_clean_connect_files=1
 endif
 
 function! g:vipySyntax()
@@ -290,6 +290,8 @@ def setup_vib():
     vim.command(vipy_pos + " new vipy.py")
     # set the global variable for everyone to reference easily
     vib = get_vim_ipython_buffer()
+    if not vib:
+        echo('It appears that your value for g:vipy_position is invalid!  See :help vipy')
     new_prompt(append=False)
 
     vim.command("setlocal nonumber")
@@ -517,9 +519,7 @@ def shift_enter_at_prompt():
         vim.command('normal G')
         vim.command('startinsert!')
     else:
-        # do a normal return FIXME
-        # vim.command('call feedkeys("\<CR>")')
-        vim.command('normal <CR>')
+        vim.command('call feedkeys("\<CR>", "n")')
 
 from math import ceil
 def print_completions(invipy=True):
