@@ -1,20 +1,20 @@
 " PYTHON FILE MAPPINGS
-nnoremap <silent> <F5> :wa<CR>:py run_this_file()<CR><ESC>l
-inoremap <silent> <F5> <ESC>:wa<CR>:py run_this_file()<CR>li
+nnoremap <silent> <buffer> <F5> :wa<CR>:py run_this_file()<CR><ESC>l
+inoremap <silent> <buffer> <F5> <ESC>:wa<CR>:py run_this_file()<CR>li
 " TODO: make K print currentword? in the buffer
 " noremap  <silent> K :py get_doc_buffer()<CR>
-vnoremap <silent> <F9> y:py run_these_lines()<CR><ESC>
-nnoremap <silent> <F9> :py run_this_line()<CR><ESC>j
-noremap  <silent> <F12> :py toggle_vib()<CR>
-inoremap <silent> <F12> <ESC>:py toggle_vib()<CR>
+vnoremap <silent> <buffer> <F9> y:py run_these_lines()<CR><ESC>
+nnoremap <silent> <buffer> <F9> :py run_this_line()<CR><ESC>j
+noremap  <silent> <buffer> <F12> :py toggle_vib()<CR>
+inoremap <silent> <buffer> <F12> <ESC>:py toggle_vib()<CR>
 
 " CELL MODE MAPPINGS
-nnoremap <expr> <silent> <S-CR> pumvisible() ? "\<ESC>:py print_completions(invipy=False)\<CR>i" : "\<ESC>:py run_cell()\<CR>\<ESC>i"
-nnoremap <silent> <C-CR> :py run_cell(progress=True)<CR><ESC>
-inoremap <expr> <silent> <S-CR> pumvisible() ? "\<ESC>:py print_completions(invipy=False)\<CR>i" : "\<ESC>:py run_cell()\<CR>\<ESC>i"
-inoremap <silent> <C-CR> <ESC>:py run_cell(progress=True)<CR><ESC>i
-vnoremap <silent> <S-CR> :py run_cell()<CR><ESC>gv
-vnoremap <silent> <C-CR> :py run_cell(progress=True)<CR><ESC>gv
+nnoremap <expr> <buffer> <silent> <S-CR> pumvisible() ? "\<ESC>:py print_completions(invipy=False)\<CR>i" : "\<ESC>:py run_cell()\<CR>\<ESC>i"
+nnoremap <silent> <buffer> <C-CR> :py run_cell(progress=True)<CR><ESC>
+inoremap <expr> <silent> <buffer> <S-CR> pumvisible() ? "\<ESC>:py print_completions(invipy=False)\<CR>i" : "\<ESC>:py run_cell()\<CR>\<ESC>i"
+inoremap <silent> <buffer> <C-CR> <ESC>:py run_cell(progress=True)<CR><ESC>i
+vnoremap <silent> <buffer> <S-CR> :py run_cell()<CR><ESC>gv
+vnoremap <silent> <buffer> <C-CR> :py run_cell(progress=True)<CR><ESC>gv
 
 " AUTO COMPLETE
 fun! CompleteIPython(findstart, base)
