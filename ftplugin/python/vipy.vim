@@ -7,6 +7,10 @@ vnoremap <silent> <buffer> <F9> y:py run_these_lines()<CR><ESC>
 nnoremap <silent> <buffer> <F9> :py run_this_line()<CR><ESC>j
 noremap  <silent> <buffer> <F12> :py toggle_vib()<CR>
 inoremap <silent> <buffer> <F12> <ESC>:py toggle_vib()<CR>
+nnoremap <silent> <buffer> <F10> :py db_step()<CR>
+nnoremap <silent> <buffer> <F11> :py db_stepinto()<CR>
+nnoremap <silent> <buffer> <C-F11> :py db_stepout()<CR>
+nnoremap <silent> <buffer> <S-F5> :py db_quit()<CR>
 
 " CELL MODE MAPPINGS
 nnoremap <expr> <buffer> <silent> <S-CR> pumvisible() ? "\<ESC>:py print_completions(invipy=False)\<CR>i" : "\<ESC>:py run_cell()\<CR>\<ESC>i"

@@ -334,37 +334,22 @@ def enter_normal(first=False):
     vim.command("inoremap <buffer> <silent> <home> <ESC>0llla")
     vim.command("noremap <buffer> <silent> 0 0llll")
 
-    # unmap debug codes
-    if not first:
-        try:
-            vim.command("nunmap <buffer> <F10>")
-            vim.command("nunmap <buffer> <F11>")
-            vim.command("nunmap <buffer> <C-F11>")
-            vim.command("nunmap <buffer> <S-F5>")
-        except vim.error:
-            pass
-
 def enter_debug():
     """ Remove all the convenience mappings. """
     global vib_map, in_debugger
     vib_map = "off"
     in_debugger = True
-    try:
-        vim.command("iunmap <buffer> <silent> <up>")
-        vim.command("iunmap <buffer> <silent> <down>")
-        vim.command("iunmap <buffer> <silent> <right>")
-        vim.command("nunmap <buffer> <silent> dd")
-        vim.command("nunmap <buffer> <silent> <home>")
-        vim.command("iunmap <buffer> <silent> <home>")
-        vim.command("nunmap <buffer> <silent> 0")
-    except vim.error:
-        pass
+    #    try:
+    #        vim.command("iunmap <buffer> <silent> <up>")
+    #        vim.command("iunmap <buffer> <silent> <down>")
+    #        vim.command("iunmap <buffer> <silent> <right>")
+    #        vim.command("nunmap <buffer> <silent> dd")
+    #        vim.command("nunmap <buffer> <silent> <home>")
+    #        vim.command("iunmap <buffer> <silent> <home>")
+    #        vim.command("nunmap <buffer> <silent> 0")
+    #    except vim.error:
+    #        pass
 
-    vim.command("nnoremap <F10> :py db_step()<CR>")
-    vim.command("nnoremap <F11> :py db_stepinto()<CR>")
-    vim.command("nnoremap <C-F11> :py db_stepout()<CR>")
-    # vim.command("nnoremap <F5> :py db_continue()<CR>") # this is set below
-    vim.command("nnoremap <S-F5> :py db_quit()<CR>")
 
 ## DEBUGGING
 """ I think the best way to do visual debugging will be to use marks for break
@@ -390,27 +375,38 @@ def update_pg():
 def signs_to_bps():
     pass
 
-def db_check(fun):
+def if_vipy_started(func):
+    def wrapper(*args, **kwargs):
+        if km:
+            func(*args, **kwargs)
+        else:
+            echo("You must start VIPY first, using <CTRL-F5>")
+    return wrapper
+            
+def db_check(func):
     """ Check whether in debug mode and print prompt. """
-    def wrapper():
+    def wrapper(*args, **kwargs):
         global in_debugger
         if in_debugger:
-            prompt = fun()
+            prompt = func(*args, **kwargs)
         else:
-            return
+            echo("This key only works in debug mode")
 
     return wrapper
 
+@if_vipy_started
 @db_check
 def db_step():
     km.stdin_channel.input('n')
     return 'next'
 
+@if_vipy_started
 @db_check
 def db_stepinto():
     km.stdin_channel.input('s')
     return 'step'
 
+@if_vipy_started
 @db_check
 def db_stepout():
     km.stdin_channel.input('unt')
@@ -427,6 +423,7 @@ def db_continue():
     km.stdin_channel.input('c')
     return 'continue'
 
+@if_vipy_started
 @db_check
 def db_quit():
     km.stdin_channel.input('q')
@@ -855,7 +852,7 @@ def get_child_msg(msg_id):
             if debugging:
                 echo('skipping a message on shell_channel','WarningMsg')
     return m
-            
+
 def with_subchannel(f, *args, **kwargs):
     "conditionally monitor subchannel"
     def f_with_update(*args, **kwargs):
@@ -867,6 +864,7 @@ def with_subchannel(f, *args, **kwargs):
             echo("not connected to IPython", 'Error')
     return f_with_update
 
+@if_vipy_started
 @with_subchannel
 def run_this_file():
     fname = repr(vim.current.buffer.name) # use repr to avoid escapes
@@ -875,6 +873,7 @@ def run_this_file():
     fname = fname.replace('\\\\','\\')
     msg_id = send("run %s %s" % (run_flags, fname))
 
+@if_vipy_started
 @with_subchannel
 def run_this_line():
     # don't send blank lines
@@ -882,6 +881,7 @@ def run_this_line():
         msg_id = send(vim.current.line.strip())
 
 ws = re.compile(r'\s*')
+@if_vipy_started
 @with_subchannel
 def run_these_lines():
     vim.command('normal y')
@@ -890,11 +890,11 @@ def run_these_lines():
     lines = [line[ws_length:] for line in lines]
     msg_id = send("\n".join(lines))
 
-
 # TODO: add support for nested cells
 # TODO: fix glitch where the cursor moves incorrectly as a result of cell mode
 # TODO: suppress the text output when in cell mode
 cell_line = re.compile(r'^\s*##[^#]?')
+@if_vipy_started
 @with_subchannel
 def run_cell(progress=False):
     """ run the code between the previous ## and next ## """
