@@ -257,6 +257,7 @@ def shutdown():
 
     del(km)
     km = None
+    status = None
     
     # wipe the buffer
     try:
