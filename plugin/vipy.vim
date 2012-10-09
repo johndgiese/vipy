@@ -590,7 +590,7 @@ def enter_at_prompt():
 
         cmds = '\n'.join(cmds)
         if cmds == 'cls' or cmds == 'clear':
-            vib[:] = None # clear the buffer
+            vim.command('normal zt')
             new_prompt(append=False)
         elif cmds.startswith('edit ') or cmds.startswith('vedit ') or cmds.startswith('sedit '):
             fnames = cmds[5:].split(' ')
