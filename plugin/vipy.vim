@@ -66,35 +66,6 @@ function! g:vipySyntax()
     hi link VipyOut Normal
 endfunction
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 " just for development: the line numbers in errors are now offset by 100
 python << EOF
 import vim
@@ -243,6 +214,7 @@ def startup():
 def shutdown():
     global km, in_debugger, vib, vihb, km_started_by_vim
     
+    status = 'idle'
     # shutdown the kernel if we started it
     if km_started_by_vim:
         if km != None:
@@ -254,10 +226,7 @@ def shutdown():
         else:
             echo('The kernel must have already shut down.')
 
-
-    del(km)
     km = None
-    status = None
     
     # wipe the buffer
     try:
@@ -334,6 +303,8 @@ def enter_normal(first=False):
     vim.command("noremap <buffer> <silent> <home> 0llll")
     vim.command("inoremap <buffer> <silent> <home> <ESC>0llla")
     vim.command("noremap <buffer> <silent> 0 0llll")
+    vim.command("noremap <buffer> <silent> <c-l> zt")
+    vim.command("noremap <buffer> <silent> I 0llla")
 
 def enter_debug():
     """ Remove all the convenience mappings. """
@@ -838,7 +809,12 @@ def update_subchannel_msgs(debug=False):
             new_prompt(goto=False)
         if is_vim_ipython_open():
             goto_vib(insert_at_end=False)
-            vim.command('exe "normal G\<C-w>p"')
+
+            # scroll to the bottom of the screen if there is new input
+            if msgs:
+                vim.command('exe "normal G\<C-w>p"')
+            else:
+                vim.command('exe "normal \<C-w>p"')
     return len(msgs)
 
             
