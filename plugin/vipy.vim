@@ -3,36 +3,6 @@
 " Maintainer: J. David Giese <johndgiese@gmail.com>
 " License: This file is placed in the public domain.
 
-" TODO: make C-F12 work outside of python files
-" TODO: add directory customization
-" FIXME: error with normalstart when there is a single apastrophe between them
-" FIXME: the color coding breaks sometimes when if 
-" TODO: better documentation
-"
-" TODO: figure out what is wrong with ion()
-" TODO: make vim-only commands work even if there are multiple entered
-" togethre
-" TODO: fix cursor issue
-" TODO: better tab complete which can tell if you are in a function call, and return arguments as appropriatey)
-" TODO: use the ipython color codes as syntax blocks in vib
-" TODO: when there is really long output, and the user is in the vib, then
-" make it act like less (so that you can scroll down)
-" TODO: ipython won't close with S-F12 if figures are open; figure out why and
-" fix
-" FIXME: running a file with F5 places you in insert mode
-" TODO: prevent F9 and other mappings from throwing warnings when python is
-" not open
-" FIXME: there is a bug that will occur if the vipy buffer isn't shown
-" in any window, and you press F12 (I think it only occurs if you have
-" changed the vim path using :cd new_directory) The bufexplorer doesn't work
-" when this bug occurs
-" TODO: handle copy-pasting into vib better
-" TODO: figure out a way to tell if the kernel is closed...
-" TODO: add debugger capabilites
-"
-" TODO: write the user guide, including advantages of vipy over other
-" setups
-
 if !has('python')
     " exit if python is not available.
     echoe('In order to use vipy you must have a version of vim or gvim that is compiled with python support.')
@@ -54,6 +24,10 @@ endif
 
 if !exists('g:vipy_position')
     let g:vipy_position='rightbelow'
+endif
+
+if !exists('g:vipy_height')
+    let g:vipy_height=20
 endif
 
 if !exists('g:vipy_clean_connect_files')
@@ -258,6 +232,8 @@ def setup_vib():
     global vib
     vipy_pos = vim.eval('g:vipy_position')
     vim.command(vipy_pos + " new vipy.py")
+    vipy_height = str(vim.eval('g:vipy_height'))
+    vim.command("resize " + vipy_height)
     # set the global variable for everyone to reference easily
     vib = get_vim_ipython_buffer()
     if not vib:
