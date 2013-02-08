@@ -1057,28 +1057,3 @@ noremap <silent> <C-F12> :py startup()<CR>
 noremap <silent> <S-F12> :py shutdown()<CR><ESC>
 inoremap <silent> <C-F12> <ESC>:py startup()<CR>
 inoremap <silent> <S-F12> <ESC>:py shutdown()<CR>
-
-" Scrolling is nice when you are reading python documentation
-function! LessMode()
-  if g:vipy_lessmode == 0
-    let g:vipy_lessmode = 1
-    let onoff = 'on'
-    " Scroll half a page down
-    noremap <script> d <C-D>
-    " Scroll one line down
-    noremap <script> j <C-E>
-    " Scroll half a page up
-    noremap <script> u <C-U>
-    " Scroll one line up
-    noremap <script> k <C-Y>
-  else
-    let g:vipy_lessmode = 0
-    let onoff = 'off'
-    unmap d
-    unmap j
-    unmap u
-    unmap k
-  endif
-  echohl Label | echo "Less mode" onoff | echohl None
-endfunction
-let g:vipy_lessmode = 0
