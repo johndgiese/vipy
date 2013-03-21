@@ -8,6 +8,7 @@
 "endif
 "let g:loaded_vipy = 1
 
+
 let g:ipy_status="idle"
 
 " let the user specify the IPython profile they want to use
@@ -37,6 +38,7 @@ noremap <silent> <S-F12> :py shutdown()<CR><ESC>
 inoremap <silent> <S-F12> <ESC>:py shutdown()<CR>
 
 python << EOF
+import subprocess
 import vim
 import sys
 import re
@@ -110,6 +112,7 @@ except AttributeError:
     sys.stderr = WithFlush(sys.stderr)
 
 ## STARTUP and SHUTDOWN
+ipython_process = None
 def startup():
     global km, fullpath, km_started_by_vim, profile_dir
     if not km:
@@ -146,17 +149,18 @@ def startup():
         except: # ... if not start one
             ipy_args = '--profile=' + profile
 
-            external_in_bg('ipython kernel ' + ipy_args)
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            ipython_process = subprocess.Popen('ipython kernel ' + ipy_args, startupinfo=startupinfo)
                 
             # try to find connection file (sometimes you need to wait a bit)
-            count = 0
-            while count < 10:
+            fullpath = None
+            while not fullpath:
                 try:
                     fullpath = find_connection_file('', profile=profile)
-                    break
                 except:
-                    count = count + 1
-                    vim.command('sleep 1')
+                    pass
+
         if fullpath:
             km = BlockingKernelManager(connection_file = fullpath)
             km.load_connection_file()
@@ -933,6 +937,7 @@ def print_help():
 def external_in_bg(cmd):
     """ Run an external command, either minimized if on windows, or in the
     background if on a unix system. """
+
     if vim.eval("has('win32')") == '1' or vim.eval("has('win64')") == '1':
         vim.command('!start /min ' + cmd)
     elif vim.eval("has('unix')") == '1' or vim.eval("has('mac')") == '1':
