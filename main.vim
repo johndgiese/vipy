@@ -2,13 +2,6 @@
 " defined in plugin/vipy.vim; the files are split like this to reduce startup
 " time for sessions where vipy isn't used.
 
-" add this back when I am done developing
-"if exists("g:loaded_vipy")
-"   finish
-"endif
-"let g:loaded_vipy = 1
-
-
 let g:ipy_status="idle"
 
 " let the user specify the IPython profile they want to use
@@ -38,30 +31,76 @@ noremap <silent> <S-F12> :py shutdown()<CR><ESC>
 inoremap <silent> <S-F12> <ESC>:py shutdown()<CR>
 
 python << EOF
-import subprocess
+import subprocess, sys, re, os
+from os import path
+
 import vim
-import sys
-import re
-import os
-from os.path import basename
+
+## Helper functions
+def vprint(msg):
+    if type(msg) == str:
+        print(msg)
+    if type(msg) == list:
+        for line in msg:
+            print(line)
+
+def vcommand(cmds):
+    if type(cmds) == str:
+        vim.command(cmds)
+    if type(cmds) == list:
+        for cmd in cmds:
+            vim.command(cmd)
+
+## Make sure you have appropriate dependencies
 try:
     import IPython
-    version = IPython.__version__.split('.')
-    if float(version[0]) == 0 and float(version[1]) < 13:
-        vim.command("echoe('vipy requires IPython >= 0.13, you have ipython version" + IPython.__version__ + "')")
-        raise ImportErorr('vipy requires IPython >= 0.13')
-except:
-    # let vim's try-catch handle this             
-    raise
+except ImportError:
+    vprint("You must have IPython 0.13 or newer installed to use ViPy.")
+    sys.exit()
 
+version = IPython.__version__.split('.')
+major = int(version[0])
+minor = int(version[1])
+if major == 0 and minor > 13:
+    vprint([
+        "It appears you have IPython {}.{} installed.".format(major, minor),
+        "You must have IPython 0.13 or newer installed to use ViPy.",
+    ])
+    sys.exit()
+    
 try:
     from IPython.zmq.blockingkernelmanager import BlockingKernelManager, Empty
     from IPython.lib.kernel import find_connection_file
 except ImportError:
-    vim.command("echoe('You must have pyzmq >= 2.1.4 installed so that vim can communicate with IPython.')")
-    if vim.eval("has('win64')") == '1':
-        vim.command("echoe('There is a known issue with pyzmq on 64 bit windows machines.')")
-    raise
+    msg = ["You must have pyzmq >= 2.1.4 installed to use ViPy."]
+    if os.name == 'nt':
+        msg.extend([
+            "There is a known issue with pyzmq on 64 bit windows machines.",
+            "See the documentation for fixing this."
+        ])
+    vprint(msg)
+
+try:
+    sys.stdout.flush
+except AttributeError:
+    # IPython complains if stderr and stdout don't have flush
+    # this is fixed in newer version of Vim
+    class WithFlush(object):
+        def __init__(self,noflush):
+            self.write=noflush.write
+            self.writelines=noflush.writelines
+        def flush(self):
+            pass
+    sys.stdout = WithFlush(sys.stdout)
+    sys.stderr = WithFlush(sys.stderr)
+
+class Vipy(object):
+    def __init__(self):
+        self.debugging = False
+        self.in_debugger = False
+        self.monitor_subchannel = True   # update vipy 'shell' on every send?
+        self.run_flags= "-i"             # flags to for IPython's run magic when using <F5>
+        self.current_line = ''
 
 debugging = False
 in_debugger = False
@@ -97,19 +136,6 @@ except:
 # get around unicode problems when interfacing with vim
 vim_encoding = vim.eval('&encoding') or 'utf-8'
 
-try:
-    sys.stdout.flush
-except AttributeError:
-    # IPython complains if stderr and stdout don't have flush
-    # this is fixed in newer version of Vim
-    class WithFlush(object):
-        def __init__(self,noflush):
-            self.write=noflush.write
-            self.writelines=noflush.writelines
-        def flush(self):
-            pass
-    sys.stdout = WithFlush(sys.stdout)
-    sys.stderr = WithFlush(sys.stderr)
 
 ## STARTUP and SHUTDOWN
 ipython_process = None
@@ -120,6 +146,7 @@ def startup():
         vim.command("au CursorHold * :python update_subchannel_msgs()")
         vim.command("au FocusGained *.py :python update_subchannel_msgs()")
         vim.command("au filetype python setlocal completefunc=CompleteIPython")
+
         # run shutdown sequense
         vim.command("au VimLeavePre :python shutdown()")
         vim.command("augroup END")
@@ -127,7 +154,7 @@ def startup():
         count = 0
         profile = vim.eval('g:vipy_profile')
         profile_dir = vim.eval('system("ipython locate profile ' + profile + '")').strip()
-        if not os.path.exists(profile_dir):
+        if not path.exists(profile_dir):
             echo("It doesn't appear that the IPython profile, %s, specified using the g:vipy_profile variable exists.  Creating the profile ..." % profile)
             external_in_bg('ipython profile create ' + profile)
             profile_dir = vim.eval('system("ipython locate profile ' + profile + '")').strip()
@@ -140,10 +167,10 @@ def startup():
             # TODO: figure out a cleaner way
             # if clean_connect_files option is selected remove connection files, and raise an error to get into the except block
             if vim.eval('g:vipy_clean_connect_files'):
-                connect_dir = os.path.dirname(fullpath)
+                connect_dir = path.dirname(fullpath)
                 connect_files = [p for p in os.listdir(connect_dir) if p.endswith('.json')]
                 for p in connect_files:
-                    os.remove(os.path.join(connect_dir, p))
+                    os.remove(path.join(connect_dir, p))
                 fullpath = None
                 raise Exception
         except: # ... if not start one
@@ -223,9 +250,6 @@ def shutdown():
     except:
         pass
 
-def km_from_connection_file():
-    return
-
 def setup_vib():
     """ Setup vib (vipy buffer), that acts like a prompt. """
     global vib
@@ -286,41 +310,6 @@ def enter_debug():
     global vib_map, in_debugger
     vib_map = "off"
     in_debugger = True
-    #    try:
-    #        vim.command("iunmap <buffer> <silent> <up>")
-    #        vim.command("iunmap <buffer> <silent> <down>")
-    #        vim.command("iunmap <buffer> <silent> <right>")
-    #        vim.command("nunmap <buffer> <silent> dd")
-    #        vim.command("nunmap <buffer> <silent> <home>")
-    #        vim.command("iunmap <buffer> <silent> <home>")
-    #        vim.command("nunmap <buffer> <silent> 0")
-    #    except vim.error:
-    #        pass
-
-
-## DEBUGGING
-""" I think the best way to do visual debugging will be to use marks for break
-points.  Originally I wanted to use signs, but it doesn't seem like there is
-any way to access there locations when you are in python.  Marks you can
-access, and set.  You can access them directly, you can set them using the
-setpos() vim function.  I think marks in combination with the showmarks
-plugin, will allow us to make a really good visual debugger that is laid on
-top of pdb. """
-# TODO: figure out a way to know when you are out of the debugger
-
-vim.command("sign define pypc texthl=ProgCount text=>>")
-vim.command("hi ProgCount guibg=#000000 guifg=#00FE33 gui=bold cterm=NONE ctermfg=red ctermbg=NONE")
-
-bps = []
-
-def update_pg():
-    """ Place a sign in the file specified by the last raw_input request with pdb"""
-    for i in range(len(vib)):
-        pass
-
-
-def signs_to_bps():
-    pass
 
 def if_vipy_started(func):
     def wrapper(*args, **kwargs):
@@ -330,52 +319,6 @@ def if_vipy_started(func):
             echo("You must start VIPY first, using <CTRL-F5>")
     return wrapper
             
-def db_check(func):
-    """ Check whether in debug mode and print prompt. """
-    def wrapper(*args, **kwargs):
-        global in_debugger
-        if in_debugger:
-            prompt = func(*args, **kwargs)
-        else:
-            echo("This key only works in debug mode")
-
-    return wrapper
-
-@if_vipy_started
-@db_check
-def db_step():
-    km.stdin_channel.input('n')
-    return 'next'
-
-@if_vipy_started
-@db_check
-def db_stepinto():
-    km.stdin_channel.input('s')
-    return 'step'
-
-@if_vipy_started
-@db_check
-def db_stepout():
-    km.stdin_channel.input('unt')
-    return 'until'
-
-def db_continue():
-    global in_debugger, bps
-    if not in_debugger:
-        if len(bps) == 0:
-            run_this_file()
-            return
-        msg_id = send("run -d %s" % (repr(vim.current.buffer.name)[1:-1]))
-        in_debugger = True
-    km.stdin_channel.input('c')
-    return 'continue'
-
-@if_vipy_started
-@db_check
-def db_quit():
-    km.stdin_channel.input('q')
-    in_debugger = False
-    return 'quit'
 
 ## COMMAND-LINE-HISTORY
 need_new_hist = True
@@ -544,7 +487,7 @@ def enter_at_prompt():
             for fname in fnames:
                 try:
                     pwd = get_ipy_pwd()
-                    pp = os.path.join(pwd, fname)
+                    pp = path.join(pwd, fname)
                     if cmds[0] == 'e':
                         vim.command('edit ' + pp)
                     elif cmds[0] == 'v':
