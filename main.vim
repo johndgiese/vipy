@@ -61,12 +61,12 @@ except ImportError:
 version = IPython.__version__.split('.')
 major = int(version[0])
 minor = int(version[1])
-if major == 0 and minor > 13:
+if major == 0 and minor < 13:
     vprint([
         "It appears you have IPython {}.{} installed.".format(major, minor),
         "You must have IPython 0.13 or newer installed to use ViPy.",
     ])
-    sys.exit()
+    raise Exception("You must have IPython 0.13 or newer installed.")
     
 try:
     from IPython.zmq.blockingkernelmanager import BlockingKernelManager, Empty
