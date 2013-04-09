@@ -55,8 +55,9 @@ def vcommand(cmds):
 try:
     import IPython
 except ImportError:
-    vprint("You must have IPython 0.13 or newer installed to use ViPy.")
-    sys.exit()
+    msg = "You must have IPython 0.13 or newer installed to use ViPy."
+    vprint(msg)
+    raise Exception(msg)
 
 version = IPython.__version__.split('.')
 major = int(version[0])
