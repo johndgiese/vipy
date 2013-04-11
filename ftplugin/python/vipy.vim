@@ -41,12 +41,12 @@ fun! CompleteIPython(findstart, base)
         let res = []
 
         python << endpython
-cl = vim.current.line
+current_line = vim.current.line
 base = vim.eval('a:base')
 completions = ['']
 indent_or_period = re.compile(r'[a-zA-Z0-9_.]')
-if complete_type in ['method','normal']:
-    msg_id = km.shell_channel.complete(base, cl, vim.eval("col('.')"))
+if complete_type in ['method', 'normal']:
+    msg_id = km.shell_channel.complete(base, current_line, vim.eval("col('.')"))
     try:
         m = get_child_msg(msg_id)
         matches = m['content']['matches']
@@ -63,13 +63,13 @@ elif complete_type == 'argument':
     o_start = count
     o_end = count
     while count > 0:
-        if cl[count] == '(':
+        if current_line[count] == '(':
             o_end = count
-        elif not indent_or_period.match(cl[count]):
+        elif not indent_or_period.match(current_line[count]):
             o_start = count
             break
         count = count - 1
-    oname = cl[o_start:o_end]
+    oname = current_line[o_start:o_end]
     # vib.append(oname)
 
     # request object info from ipython
@@ -84,7 +84,7 @@ elif complete_type == 'argument':
         echo("no reply from IPython kernel") 
 
 for c in completions:
-    vim.command('call add(res,"'+c+'")')
+    vim.command('call add(res,"' + c + '")')
 endpython
 
         return res

@@ -10,7 +10,7 @@ The plugin also provides a number of features for all python files:
 
 * Smart autocomplete using IPython's object? ability
 * Execute the current visual selection with F9
-* Run the current file by pressing F5
+* Run the current file by pressing <leader>5
 * CTRL-ENTER and SHIFT-ENTER will run the current "cell" (i.e. like MATLAB's cell mode; see below for more details)
 
 An example vipy session with one regular python file, and the special vipy buffer to the right:
@@ -41,7 +41,7 @@ I have tested the plugin on Ubuntu and Windows 7 (64bit and 32bit).
 * Download vipy.vim and place it in the directory .vim/ftplugin/python/vipy.vim or if you are using pathogen, in bundle/vipy/ftplugin/python/vipy.vim
 
 # Basic Usage
-* Press CTRL-F12 to start vipy
+* Press CTRL-F12 to start vipy (or use :py vipy_startup() )
 
 CTRL-F12 will look for an opened IPython kernel, but if it can't find one it will start one for you in a separate command window (don't close it manually!).  After connecting to the IPython kernel, vipy will open a new vim window to the right of the current vim window with a special buffer loaded in it, called vipy.py.
 
@@ -56,12 +56,11 @@ The vipy buffer has some special mappings that make it act like the IPython prom
 * The status of the IPython kernel is displayed in the status line of the vipy buffer
 
 If you are in another python file (not the vipy buffer):
-* CTRL-F5 will execute the current file
-* F9 in visual mode will execute the selected text
+* <leader>5 will execute the current file
+* <leader>5 in visual mode will execute the selected text
 * F9 in normal mode will execute the current line, and progress to the next line, so that you "step" through a simple file by pressing F9 repeatedly.
-* Pressing K in normal mode will open the documentation for the word that the cursor is on, in a new window.  While in this documentation window, pressing K again will move the cursor back to the previous spot (while keeping the window open).  Pressing q or ESC from within the documentation buffer will close it.
 * Pressing F12 will drop the vipy buffer in the current window if it isn't currently opened in any vim window, otherwise it will move the cursor to the end of the vipy buffer.
-* SHIFT-F12 will wipe the vipy buffer and close the kernel
+* SHIFT-F12 will wipe the vipy buffer and close the kernel (can also use :py vipy_shutdown() )
 * SHIFT-ENTER will execute the current CELL.  For anyone who is unfamiliar with MATLAB's cell mode, it works as follows: A cell is a set of statements surrounded by a special comment starting with two pound signs (i.e. ##).  If you press SHIFT-ENTER the current cell will be executed.  If you press CTRL-ENTER, the current cell will be executed, and the cursor will progress to the next cell, so that you can conveniently step through cells of your program.  Cell mode is useful for situations where you want to load data once, but execute some analysis of that data multiple times
 
 Note that the vipy buffer is designed to act similarly to the MATLAB command window/editor.  I.e. you will have your normal python files opened in various windows, and you will also have the vipy buffer (i.e. the command window) open in a separate window.  You can close the vipy window if you want, and the buffer will remain in the background.

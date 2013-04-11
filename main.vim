@@ -17,10 +17,6 @@ if !exists('g:vipy_height')
     let g:vipy_height=20
 endif
 
-if !exists('g:vipy_clean_connect_files')
-    let g:vipy_clean_connect_files=1
-endif
-
 function! g:vipySyntax()
     syn region VipyIn start=/\v(^\>{3})\zs/ end=/\v\ze^.{0,2}$|\ze^\>{3}|\ze^[^.>]..|\ze^.[^.>].|\ze^..[^.>]/ contains=ALL transparent keepend
     syn region VipyOut start=/\v\zs^.{0,2}$|\zs^[^.>]..|\zs^.[^.>].|\zs^..[^.>]/ end=/\v\ze^\>{3}/ 
@@ -61,6 +57,7 @@ except ImportError:
 version = IPython.__version__.split('.')
 major = int(version[0])
 minor = int(version[1])
+using_windows = os.name == 'nt'
 if major == 0 and minor > 13:
     vprint([
         "It appears you have IPython {}.{} installed.".format(major, minor),
@@ -73,7 +70,7 @@ try:
     from IPython.lib.kernel import find_connection_file
 except ImportError:
     msg = ["You must have pyzmq >= 2.1.4 installed to use ViPy."]
-    if os.name == 'nt':
+    if using_windows:
         msg.extend([
             "There is a known issue with pyzmq on 64 bit windows machines.",
             "See the documentation for fixing this."
@@ -139,7 +136,7 @@ vim_encoding = vim.eval('&encoding') or 'utf-8'
 
 ## STARTUP and SHUTDOWN
 ipython_process = None
-def startup():
+def vipy_startup():
     global km, fullpath, km_started_by_vim, profile_dir
     if not km:
         vim.command("augroup vimipython")
@@ -148,7 +145,7 @@ def startup():
         vim.command("au filetype python setlocal completefunc=CompleteIPython")
 
         # run shutdown sequense
-        vim.command("au VimLeavePre :python shutdown()")
+        vim.command("au VimLeavePre :python vipy_shutdown()")
         vim.command("augroup END")
 
         count = 0
@@ -160,25 +157,27 @@ def startup():
             profile_dir = vim.eval('system("ipython locate profile ' + profile + '")').strip()
 
         fullpath = None
+        ipy_args = []
         try:
             # see if there is already an IPython instance open ...
             fullpath = find_connection_file('', profile=profile)
 
-            # TODO: figure out a cleaner way
-            # if clean_connect_files option is selected remove connection files, and raise an error to get into the except block
-            if vim.eval('g:vipy_clean_connect_files'):
-                connect_dir = path.dirname(fullpath)
-                connect_files = [p for p in os.listdir(connect_dir) if p.endswith('.json')]
-                for p in connect_files:
-                    os.remove(path.join(connect_dir, p))
-                fullpath = None
-                raise Exception
+            # remove old connection files, and raise an error to get into the except block
+            connect_dir = path.dirname(fullpath)
+            connect_files = [p for p in os.listdir(connect_dir) if p.endswith('.json')]
+            for p in connect_files:
+                os.remove(path.join(connect_dir, p))
+            fullpath = None
+            raise Exception
         except: # ... if not start one
-            ipy_args = '--profile=' + profile
+            ipy_args.append('--profile={}'.format(profile))
 
-            startupinfo = subprocess.STARTUPINFO()
-            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-            ipython_process = subprocess.Popen('ipython kernel ' + ipy_args, startupinfo=startupinfo)
+            options = {}
+            if using_windows:
+                startupinfo = subprocess.STARTUPINFO()
+                startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+                options['startupinfo'] = startupinfo
+            ipython_process = subprocess.Popen(['ipython', 'kernel'] + ipy_args, **options)
                 
             # try to find connection file (sometimes you need to wait a bit)
             fullpath = None
@@ -211,7 +210,7 @@ def startup():
     else:
         echo('Vipy has already been started!  Press SHIFT-F12 to close the current seeion.')
 
-def shutdown():
+def vipy_shutdown():
     global km, in_debugger, vib, vihb, km_started_by_vim
     
     status = 'idle'
