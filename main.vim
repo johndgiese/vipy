@@ -51,19 +51,20 @@ def vcommand(cmds):
 try:
     import IPython
 except ImportError:
-    vprint("You must have IPython 0.13 or newer installed to use ViPy.")
-    sys.exit()
+    msg = "You must have IPython 0.13 or newer installed to use ViPy."
+    vprint(msg)
+    raise Exception(msg)
 
 version = IPython.__version__.split('.')
 major = int(version[0])
 minor = int(version[1])
 using_windows = os.name == 'nt'
-if major == 0 and minor > 13:
+if major == 0 and minor < 13:
     vprint([
         "It appears you have IPython {}.{} installed.".format(major, minor),
         "You must have IPython 0.13 or newer installed to use ViPy.",
     ])
-    sys.exit()
+    raise Exception("You must have IPython 0.13 or newer installed.")
     
 try:
     from IPython.zmq.blockingkernelmanager import BlockingKernelManager, Empty
