@@ -23,8 +23,8 @@ function! g:vipySyntax()
     hi link VipyOut Normal
 endfunction
 
-noremap <silent> <S-F12> :py shutdown()<CR><ESC>
-inoremap <silent> <S-F12> <ESC>:py shutdown()<CR>
+noremap <silent> <S-F12> :py vipy_shutdown()<CR><ESC>
+inoremap <silent> <S-F12> <ESC>:py vipy_shutdown()<CR>
 
 python << EOF
 import subprocess, sys, re, os
