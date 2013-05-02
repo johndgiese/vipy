@@ -41,7 +41,7 @@ I have tested the plugin on Ubuntu and Windows 7 (64bit and 32bit).
 * Download vipy.vim and place it in the directory .vim/ftplugin/python/vipy.vim or if you are using pathogen, in bundle/vipy/ftplugin/python/vipy.vim
 
 # Basic Usage
-* Press CTRL-F12 to start vipy (or use :py vipy_startup() )
+* Press CTRL-F12 to start vipy
 
 CTRL-F12 will look for an opened IPython kernel, but if it can't find one it will start one for you in a separate command window (don't close it manually!).  After connecting to the IPython kernel, vipy will open a new vim window to the right of the current vim window with a special buffer loaded in it, called vipy.py.
 
