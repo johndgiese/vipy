@@ -28,7 +28,8 @@ inoremap <silent> <S-F12> <ESC>:py vipy_shutdown()<CR>
 
 python << EOF
 import subprocess, sys, re, os
-from os import path
+from os import path, kill
+from string import replace
 
 import vim
 
@@ -161,15 +162,17 @@ def vipy_startup():
         ipy_args = []
         try:
             # see if there is already an IPython instance open ...
-            fullpath = find_connection_file('', profile=profile)
-
-            # remove old connection files, and raise an error to get into the except block
-            connect_dir = path.dirname(fullpath)
-            connect_files = [p for p in os.listdir(connect_dir) if p.endswith('.json')]
-            for p in connect_files:
-                os.remove(path.join(connect_dir, p))
-            fullpath = None
-            raise Exception
+            while (not fullpath):
+                fullpath = find_connection_file('', profile=profile)
+                pid=path.basename(fullpath).replace('kernel-','').replace('.json','')
+                try:
+                    kill(int(pid),0)
+                except:
+                    # remove old connection files
+                    os.remove(fullpath)
+		    fullpath=None
+            km_started_by_vim = False
+            
         except: # ... if not start one
             ipy_args.append('--profile={}'.format(profile))
 
@@ -187,12 +190,12 @@ def vipy_startup():
                     fullpath = find_connection_file('', profile=profile)
                 except:
                     pass
+            km_started_by_vim = True
 
         if fullpath:
             km = BlockingKernelManager(connection_file = fullpath)
             km.load_connection_file()
             km.start_channels()
-            km_started_by_vim = True
         else:
             echo("Couldn't connect to vim-ipython.")
             return
