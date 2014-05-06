@@ -1,3 +1,5 @@
+Note this project is no longer actively developed.
+
 # Features
 This plugin provides a special Vim buffer that acts like the IPython terminal.  No more alt-tabbing from your editor to the interpreter!  This special buffer has the following features:
 * Search command history from previous sessions using up and down arrows
