@@ -17,7 +17,7 @@ if !exists('g:vipy_height')
     let g:vipy_height=20
 endif
 
-function! g:vipySyntax()
+function! VipySyntax()
     syn region VipyIn start=/\v(^\>{3})\zs/ end=/\v\ze^.{0,2}$|\ze^\>{3}|\ze^[^.>]..|\ze^.[^.>].|\ze^..[^.>]/ contains=ALL transparent keepend
     syn region VipyOut start=/\v\zs^.{0,2}$|\zs^[^.>]..|\zs^.[^.>].|\zs^..[^.>]/ end=/\v\ze^\>{3}/ 
     hi link VipyOut Normal
@@ -289,7 +289,7 @@ def setup_vib():
     vim.command("setlocal statusline=\ VIPY:\ %-{g:ipy_status}")
     
     # handle syntax coloring a little better
-    vim.command('call g:vipySyntax()') # avoid problems with \v being escaped in the regexps
+    vim.command('call VipySyntax()') # avoid problems with \v being escaped in the regexps
 
 def enter_normal(first=False):
     global vib_map, in_debugger
